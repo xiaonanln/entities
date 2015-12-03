@@ -1,2 +1,2 @@
 # entities
-Distributed Entities with efficient RPC
+Distributed entities with efficient RPC: engine for building versatile servers. 
