@@ -14,5 +14,5 @@ func NewJsonRPCEncoder(w io.Writer) *JsonRPCEncoder {
 }
 
 func (self *JsonRPCEncoder) Encode(eid string, method string, arguments []interface{}) error {
-	return self.jsonEncoder.Encode(jsonCall{eid: eid, method: method, args: arguments})
+	return self.jsonEncoder.Encode(jsonCall{Eid: eid, Method: method, Args: arguments})
 }

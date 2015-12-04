@@ -6,9 +6,9 @@ import (
 )
 
 type jsonCall struct {
-	eid    string
-	method string
-	args   []interface{}
+	Eid    string        `json:"E"`
+	Method string        `json:"M"`
+	Args   []interface{} `json:"A"`
 }
 
 type JsonRPCDecoder struct {
@@ -26,6 +26,6 @@ func (self *JsonRPCDecoder) Decode(eid *string, method *string, args *[]interfac
 		return err
 	}
 
-	*eid, *method, *args = call.eid, call.method, call.args
+	*eid, *method, *args = call.Eid, call.Method, call.Args
 	return nil
 }
