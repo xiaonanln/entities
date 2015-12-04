@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	PROFILE_COUNT = 100000
+	PROFILE_COUNT = 300000
 
 	TEST_EID    = "testentityid"
 	TEST_METHOD = "testmethodname"

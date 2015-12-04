@@ -3,7 +3,6 @@ package rpc
 import (
 	"encoding/json"
 	"io"
-	"strings"
 )
 
 type CustomRPCDecoder struct {
@@ -16,26 +15,31 @@ func NewCustomRPCDecoder(r io.Reader) *CustomRPCDecoder {
 }
 
 func (self *CustomRPCDecoder) Decode(eid *string, method *string, args *[]interface{}) error {
-	err := self.readFixedLenString(eid, MAX_EID_LENGTH)
-	if err != nil {
-		return nil
-	}
-	err = self.readFixedLenString(method, MAX_METHOD_LENGTH)
-	if err != nil {
-		return nil
-	}
-
+	self.readString(eid)
+	self.readString(method)
 	return self.jsonDecoder.Decode(args)
 }
 
-func (self *CustomRPCDecoder) readFixedLenString(s *string, fixedLen int) error {
-	buf := make([]byte, fixedLen, fixedLen)
-	err := self.readAll(buf)
+func (self *CustomRPCDecoder) readString(s *string) error {
+	lenByte, err := self.readByte()
 	if err != nil {
 		return err
 	}
-	*s = strings.TrimSpace(string(buf))
+
+	strLen := int(lenByte)
+	strbuf := make([]byte, strLen, strLen)
+	err = self.readAll(strbuf)
+	if err != nil {
+		return err
+	}
+	*s = string(strbuf)
 	return nil
+}
+
+func (self *CustomRPCDecoder) readByte() (byte, error) {
+	buf := []byte{0}
+	err := self.readAll(buf)
+	return buf[0], err
 }
 
 func (self *CustomRPCDecoder) readAll(p []byte) error {

@@ -5,11 +5,6 @@ import (
 	"io"
 )
 
-const (
-	MAX_EID_LENGTH    = 16
-	MAX_METHOD_LENGTH = 32
-)
-
 type CustomRPCEncoder struct {
 	writer      io.Writer
 	jsonEncoder *json.Encoder
@@ -19,18 +14,13 @@ func NewCustomRPCEncoder(w io.Writer) *CustomRPCEncoder {
 	return &CustomRPCEncoder{writer: w, jsonEncoder: json.NewEncoder(w)}
 }
 
-func (self *CustomRPCEncoder) writeFixedLenString(s string, fixedLen int) error {
-	var err error
-	bytes := []byte(s)
-	if len(bytes) >= fixedLen {
-		return self.writeAll(bytes[:fixedLen])
-	} else {
-		err = self.writeAll(bytes)
-		if err != nil {
-			return nil
-		}
-		return self.writeByte(' ', fixedLen-len(bytes))
+func (self *CustomRPCEncoder) writeString(s string) error {
+	lenByte := byte(len(s))
+	err := self.writeByte(lenByte)
+	if err != nil {
+		return err
 	}
+	return self.writeAll([]byte(s))
 }
 
 func (self *CustomRPCEncoder) writeAll(buf []byte) error {
@@ -44,23 +34,13 @@ func (self *CustomRPCEncoder) writeAll(buf []byte) error {
 	return nil
 }
 
-func (self *CustomRPCEncoder) writeByte(b byte, count int) error {
-	bytes := make([]byte, count, count)
-	for i := 0; i < count; i++ {
-		bytes[i] = b
-	}
-	return self.writeAll(bytes)
+func (self *CustomRPCEncoder) writeByte(b byte) error {
+	buf := []byte{b}
+	return self.writeAll(buf)
 }
 
 func (self *CustomRPCEncoder) Encode(eid string, method string, arguments []interface{}) error {
-	err := self.writeFixedLenString(eid, MAX_EID_LENGTH)
-	if err != nil {
-		return err
-	}
-
-	err = self.writeFixedLenString(method, MAX_METHOD_LENGTH)
-	if err != nil {
-		return err
-	}
+	self.writeString(eid)
+	self.writeString(method)
 	return self.jsonEncoder.Encode(arguments)
 }
