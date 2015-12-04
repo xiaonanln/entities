@@ -21,6 +21,7 @@ var (
 
 	profileJson       = flag.Bool("json", false, "profile json")
 	profileGob        = flag.Bool("gob", false, "profile gob")
+	profileCustom     = flag.Bool("custom", false, "profile custom")
 	useLargeArguments = flag.Bool("large", false, "use large arguments")
 )
 
@@ -38,22 +39,29 @@ func main() {
 		jsonBuffer := bytes.NewBuffer([]byte{})
 		jsonRpcEncoder := rpc.NewJsonRPCEncoder(jsonBuffer)
 		jsonRpcDecoder := rpc.NewJsonRPCDecoder(jsonBuffer)
-		profile(jsonRpcEncoder, jsonRpcDecoder)
+		profile("json", jsonRpcEncoder, jsonRpcDecoder)
 	}
 
 	if *profileGob {
 		gobBuffer := bytes.NewBuffer([]byte{})
 		gobRpcEncoder := rpc.NewGobRPCEncoder(gobBuffer)
 		gobRpcDecoder := rpc.NewGobRPCDecoder(gobBuffer)
-		profile(gobRpcEncoder, gobRpcDecoder)
+		profile("gob", gobRpcEncoder, gobRpcDecoder)
+	}
+
+	if *profileCustom {
+		customBuffer := bytes.NewBuffer([]byte{})
+		customRpcEncoder := rpc.NewCustomRPCEncoder(customBuffer)
+		customRpcDecoder := rpc.NewCustomRPCDecoder(customBuffer)
+		profile("custom", customRpcEncoder, customRpcDecoder)
 	}
 }
 
-func profile(encoder rpc.RPCEncoder, decoder rpc.RPCDecoder) {
+func profile(id string, encoder rpc.RPCEncoder, decoder rpc.RPCDecoder) {
 	args := TEST_ARGS_SMALL
 	profileCount := PROFILE_COUNT
 	if *useLargeArguments {
-		log.Println("using large arguments!!!")
+		log.Printf("%s: using large arguments!!!\n", id)
 		args = TEST_ARGS_LARGE
 		profileCount = profileCount / 100
 	}
@@ -76,5 +84,5 @@ func profile(encoder rpc.RPCEncoder, decoder rpc.RPCDecoder) {
 		}
 	}
 	elapsedTime := time.Since(startTime)
-	log.Printf("profile takes %f seconds\n", elapsedTime.Seconds())
+	log.Printf("profile %s takes %f seconds\n", id, elapsedTime.Seconds())
 }
