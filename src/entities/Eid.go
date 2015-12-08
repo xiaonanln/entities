@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+const (
+	EID_LENGTH = 12
+)
+
 type Eid string
 
 // NewObjectId returns a new unique ObjectId.
