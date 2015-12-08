@@ -4,6 +4,7 @@ import (
 	"conf"
 	"fmt"
 	"log"
+	"mapd"
 	"net"
 )
 
@@ -33,10 +34,11 @@ func runMapd() {
 		if err != nil {
 			panic(err)
 		}
-		go handleConnection(conn)
+		go serveConnection(conn)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func serveConnection(conn net.Conn) {
+	_ = mapd.NewClientProxy(conn)
 
 }
