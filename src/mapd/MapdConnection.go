@@ -40,3 +40,7 @@ func (self MapdConnection) RecvPid() (Pid, error) {
 	v, err := self.RecvUint16()
 	return Pid(v), err
 }
+
+func (self MapdConnection) SendReplyOk() error {
+	return self.SendByte(REPLY_OK)
+}

@@ -7,6 +7,7 @@ import (
 	"log"
 	. "mapd"
 	"net"
+	"time"
 )
 
 var (
@@ -71,6 +72,9 @@ func processNextCommand(client *ClientProxy) {
 		processSet(client)
 	case CMD_PID:
 		processPid(client)
+	case CMD_SYNC_TIME:
+		processSyncTime(client)
+
 	}
 }
 
@@ -109,4 +113,10 @@ func processSet(client *ClientProxy) {
 		panic(err)
 	}
 	mapping[eid] = client.Pid
+	client.SendReplyOk()
+}
+
+func processSyncTime(client *ClientProxy) {
+	var nano int64 = time.Now().UnixNano()
+	client.SendInt64(nano)
 }

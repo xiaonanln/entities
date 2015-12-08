@@ -1,6 +1,9 @@
 package common
 
-import "net"
+import (
+	"encoding/binary"
+	"net"
+)
 
 type BinaryConnection struct {
 	Connection
@@ -36,4 +39,10 @@ func (self BinaryConnection) RecvUint16() (uint16, error) {
 func (self BinaryConnection) SendUint16(val uint16) error {
 	buf := []byte{byte(val), byte(val >> 8)}
 	return self.SendAll(buf)
+}
+
+func (self BinaryConnection) SendInt64(val int64) error {
+	bytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bytes, uint64(val))
+	return self.SendAll(bytes)
 }
