@@ -10,6 +10,10 @@ func NewConnection(conn net.Conn) Connection {
 	return Connection{conn}
 }
 
+func (self Connection) String() string {
+	return self.conn.RemoteAddr().String()
+}
+
 func (self Connection) RecvByte() (byte, error) {
 	buf := []byte{0}
 	for {
