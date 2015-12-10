@@ -58,8 +58,8 @@ func processSet(client *ClientProxy) {
 		panic(err)
 	}
 	mapping[eid] = client.Pid
-	log.Printf("SET %s => %d", eid, client.Pid)
 	client.SendReplyOk()
+	log.Printf("SET %s => %d", eid, client.Pid)
 }
 
 func processSyncTime(client *ClientProxy) {
@@ -75,13 +75,4 @@ func processLockEid(client *ClientProxy) {
 	}
 	// TODO: lock Eid, cache post-coming calls for a period of time
 	// send lock ok when ready
-}
-
-func anyError(errors ...error) error {
-	for _, err := range errors {
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
