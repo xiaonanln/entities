@@ -7,6 +7,7 @@ import (
 	"log"
 	. "mapd"
 	"net"
+	"strings"
 )
 
 var (
@@ -55,7 +56,17 @@ func serveMapdClient(client *ClientProxy) {
 
 func processClientError(client *ClientProxy) {
 	if err := recover(); err != nil {
-		log.Printf("ERROR: %s: %s", client, err)
+		normalClose := false
+		if _err := err.(error); _err != nil {
+			errorStr := _err.Error()
+			if strings.Contains(errorStr, "EOF") || strings.Contains(errorStr, "closed") {
+				// just normal close
+				normalClose = true
+			}
+		}
+		if !normalClose {
+			log.Printf("ERROR: %s: %T %s", client, err, err)
+		}
 		client.Close()
 	}
 	log.Println("Connection closed:", client)
