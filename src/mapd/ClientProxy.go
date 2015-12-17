@@ -3,15 +3,21 @@ package mapd
 import (
 	"fmt"
 	"net"
+	"rpc"
 )
 
 type ClientProxy struct {
 	MapdConnection
-	Pid Pid
+	Pid        Pid
+	rpcEncoder rpc.RPCEncoder
+	rpcDecoder rpc.RPCDecoder
 }
 
 func NewClientProxy(conn net.Conn) *ClientProxy {
-	return &ClientProxy{MapdConnection: NewMapdConnection(conn)}
+	cp := &ClientProxy{MapdConnection: NewMapdConnection(conn)}
+	cp.rpcEncoder = rpc.NewCustomRPCEncoder(cp.MapdConnection)
+	cp.rpcDecoder = rpc.NewCustomRPCDecoder(cp.MapdConnection)
+	return cp
 }
 
 func (self *ClientProxy) SetPid(pid Pid) {

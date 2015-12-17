@@ -1,7 +1,7 @@
 package main
 
 import (
-	"entities"
+	. "common"
 	"log"
 	"mapd"
 	"net"
@@ -21,13 +21,14 @@ func main() {
 	}
 	log.Println("Set pid successfully")
 
-	eid := entities.NewEid()
+	eid := NewEid()
 	err = client.SetMapping(eid)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	log.Println("Set mapping successfully")
 
+	client.RPC(eid, "TestRPC", []interface{}{1, "2", 3.0})
+	log.Println("Send RPC successfully")
 	client.Close()
 }

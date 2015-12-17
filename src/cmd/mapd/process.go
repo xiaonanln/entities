@@ -1,7 +1,7 @@
 package main
 
 import (
-	. "entities"
+	. "common"
 	"log"
 	. "mapd"
 	"time"
@@ -14,6 +14,8 @@ func processNextCommand(client *ClientProxy) {
 	}
 	log.Println("CMD:", cmd)
 	switch cmd {
+	case CMD_RPC:
+		processRPC(client)
 	case CMD_QUERY:
 		processQuery(client)
 	case CMD_SET:
@@ -75,4 +77,17 @@ func processLockEid(client *ClientProxy) {
 	}
 	// TODO: lock Eid, cache post-coming calls for a period of time
 	// send lock ok when ready
+}
+
+func processRPC(client *ClientProxy) {
+	var eid Eid
+	var method string
+	var args []interface{}
+	err := client.RecvRPC(&eid, &method, &args)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("RPC: %s.%s(%v)", eid, method, args)
+	// send back ok
+	client.SendReplyOk()
 }

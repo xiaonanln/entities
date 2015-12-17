@@ -1,10 +1,10 @@
 package mapd
 
 import (
-	"common"
-	"entities"
+	. "common"
 	"fmt"
 	"net"
+	"rpc"
 )
 
 const (
@@ -15,12 +15,17 @@ const (
 type Pid uint16
 
 type MapdConnection struct {
-	common.BinaryConnection
+	BinaryConnection
+	rpcEncoder rpc.RPCEncoder
+	rpcDecoder rpc.RPCDecoder
 }
 
 func NewMapdConnection(conn net.Conn) MapdConnection {
-	binaryConn := common.NewBinaryConnection(conn)
-	return MapdConnection{BinaryConnection: binaryConn}
+	binaryConn := NewBinaryConnection(conn)
+	mapdCon := MapdConnection{BinaryConnection: binaryConn}
+	mapdCon.rpcEncoder = rpc.NewCustomRPCEncoder(mapdCon)
+	mapdCon.rpcDecoder = rpc.NewCustomRPCDecoder(mapdCon)
+	return mapdCon
 }
 
 func (self MapdConnection) RecvCmd() (byte, error) {
@@ -32,12 +37,12 @@ func (self MapdConnection) SendCmd(cmd byte) error {
 	return self.SendByte(cmd)
 }
 
-func (self MapdConnection) RecvEid(eid *entities.Eid) error {
-	err := self.RecvFixedLengthString(entities.EID_LENGTH, (*string)(eid))
+func (self MapdConnection) RecvEid(eid *Eid) error {
+	err := self.RecvFixedLengthString(EID_LENGTH, (*string)(eid))
 	return err
 }
 
-func (self MapdConnection) SendEid(eid entities.Eid) error {
+func (self MapdConnection) SendEid(eid Eid) error {
 	return self.SendFixedLengthString(string(eid))
 }
 
@@ -63,4 +68,12 @@ func (self MapdConnection) RecvReplyOk() error {
 		return fmt.Errorf("expect REPLY_OK but received %v", b)
 	}
 	return nil
+}
+
+func (self MapdConnection) SendRPC(eid Eid, method string, args []interface{}) error {
+	return self.rpcEncoder.Encode(string(eid), method, args)
+}
+
+func (self MapdConnection) RecvRPC(eid *Eid, method *string, args *[]interface{}) error {
+	return self.rpcDecoder.Decode((*string)(eid), method, args)
 }

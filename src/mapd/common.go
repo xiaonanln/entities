@@ -1,7 +1,8 @@
 package mapd
 
 const (
-	CMD_RPC      = 1    // RPC call
+	CMD_INVALID  = iota // invalid cmd: 0
+	CMD_RPC      = iota // RPC call
 	CMD_PID      = iota // set client Pid
 	CMD_QUERY    = iota // query Eid : Pid
 	CMD_SET      = iota // just set Eid : Pid

@@ -1,8 +1,8 @@
 package main
 
 import (
+	. "common"
 	"conf"
-	"entities"
 	"fmt"
 	"log"
 	. "mapd"
@@ -12,7 +12,7 @@ import (
 
 var (
 	mapdConfig *conf.MapdConfig
-	mapping    map[entities.Eid]Pid = make(map[entities.Eid]Pid)
+	mapping    map[Eid]Pid = make(map[Eid]Pid)
 )
 
 func main() {
