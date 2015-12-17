@@ -13,8 +13,9 @@ var (
 )
 
 type MapdConfig struct {
-	Host string
-	Port int
+	Host    string
+	CmdPort int `json:"cmd_port"`
+	RPCPort int `json:"rpc_port"`
 }
 
 type EntitiesdConfig struct {

@@ -11,6 +11,7 @@ const (
 )
 
 const (
-	REPLY_OK      = 1    // Reply ok: used when there is nothing to reply
-	REPLY_LOCK_OK = iota // Lock reply
+	REPLY_INVALID = iota
+	REPLY_RPC     = iota
+	REPLY_OK      = iota // Reply ok: used when there is nothing to reply
 )
