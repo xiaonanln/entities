@@ -45,11 +45,7 @@ func processQuery(client *ClientProxy) {
 		panic(err)
 	}
 
-	pid, ok := mapping[eid]
-	if !ok {
-		pid = client.Pid
-		mapping[eid] = pid
-	}
+	pid := GetMapping(eid, client.Pid)
 	client.SendPid(pid)
 }
 
@@ -59,7 +55,7 @@ func processSet(client *ClientProxy) {
 	if err != nil {
 		panic(err)
 	}
-	mapping[eid] = client.Pid
+	SetMapping(eid, client.Pid)
 	client.SendReplyOk()
 	log.Printf("SET %s => %d", eid, client.Pid)
 }
@@ -90,4 +86,6 @@ func processRPC(client *ClientProxy) {
 	log.Printf("RPC: %s.%s(%v)", eid, method, args)
 	// send back ok
 	client.SendReplyOk()
+
+	DispatchRPC(eid, method, args, client.Pid)
 }

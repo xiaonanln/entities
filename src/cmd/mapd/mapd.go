@@ -1,7 +1,6 @@
 package main
 
 import (
-	. "common"
 	"conf"
 	"fmt"
 	"log"
@@ -13,8 +12,7 @@ import (
 
 var (
 	mapdConfig   *conf.MapdConfig
-	mapping      map[Eid]Pid = make(map[Eid]Pid)
-	waitServices             = sync.WaitGroup{}
+	waitServices = sync.WaitGroup{}
 )
 
 func main() {
@@ -65,9 +63,21 @@ func serveRPCService() {
 			panic(err)
 		}
 		log.Println("New connection:", conn.RemoteAddr())
-		go serveCmdConnection(conn)
+		go serveRPCConnection(conn)
 	}
 	waitServices.Done()
+}
+
+func serveRPCConnection(conn net.Conn) {
+	client := NewClientProxy(conn)
+	pid, err := client.RecvPid()
+	if err != nil {
+		handleClientError(client, err)
+		return
+	}
+	log.Printf("Received pid of %s: %v", client, pid)
+	client.SetPid(pid)
+	AddRPCClient(client, pid)
 }
 
 func serveCmdConnection(conn net.Conn) {
@@ -76,26 +86,30 @@ func serveCmdConnection(conn net.Conn) {
 }
 
 func serveCmdMapdClient(client *ClientProxy) {
-	defer processClientError(client)
+	defer serveCmdMapdClientDone(client)
 	for {
 		processNextCommand(client)
 	}
 }
 
-func processClientError(client *ClientProxy) {
+func serveCmdMapdClientDone(client *ClientProxy) {
 	if err := recover(); err != nil {
-		normalClose := false
-		if _err := err.(error); _err != nil {
-			errorStr := _err.Error()
-			if strings.Contains(errorStr, "EOF") || strings.Contains(errorStr, "closed") {
-				// just normal close
-				normalClose = true
-			}
-		}
-		if !normalClose {
-			log.Printf("ERROR: %s: %T %s", client, err, err)
-		}
-		client.Close()
+		handleClientError(client, err)
 	}
 	log.Println("Connection closed:", client)
+}
+
+func handleClientError(client *ClientProxy, err interface{}) {
+	normalClose := false
+	if _err := err.(error); _err != nil {
+		errorStr := _err.Error()
+		if strings.Contains(errorStr, "EOF") || strings.Contains(errorStr, "closed") {
+			// just normal close
+			normalClose = true
+		}
+	}
+	if !normalClose {
+		log.Printf("ERROR: %s: %T %s", client, err, err)
+	}
+	client.Close()
 }
