@@ -2,11 +2,13 @@ package main
 
 import (
 	"entities"
+	"entitiesd"
 	"time"
 )
 
 func main() {
-	entities.RegisterEntity(&entities.TestEntity{})
+	entities.RegisterEntity(&entitiesd.TestEntity{})
+
 	// entities.RegisterEntity(&entities.TestEntity{})
 	e1 := entities.NewEntity("TestEntity")
 	e2 := entities.NewEntity("TestEntity")

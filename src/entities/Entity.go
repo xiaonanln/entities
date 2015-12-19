@@ -1,6 +1,7 @@
 package entities
 
 import (
+	. "common"
 	"fmt"
 	"log"
 	"reflect"
@@ -17,7 +18,8 @@ func (self callQueueItem) String() string {
 }
 
 type EntityType interface {
-	Id() string
+	Id() Eid
+	Call(id Eid, method string, args ...interface{})
 }
 
 type Entity struct {
@@ -40,6 +42,7 @@ func (self *Entity) String() string {
 	return fmt.Sprintf(`Entity<%s>`, self.id)
 }
 
+// call another entity
 func (self *Entity) Call(id Eid, method string, args ...interface{}) {
 	entity := GetLocalEntity(id)
 	if entity != nil {
@@ -72,16 +75,4 @@ func (self *Entity) handleCall(call *callQueueItem) {
 		in[i] = reflect.ValueOf(arg)
 	}
 	method.Call(in)
-}
-
-type TestEntity struct {
-	Entity
-}
-
-func (self *TestEntity) Foo(a int) {
-	fmt.Println("RPC SUCCESSFULLY:", self, "Foo", a)
-}
-
-func (self *TestEntity) Bar(a string, b string) {
-	fmt.Println("RPC:", self, "Bar", a, b)
 }

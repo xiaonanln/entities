@@ -1,6 +1,7 @@
 package entities
 
 import (
+	. "common"
 	"fmt"
 	"log"
 	"reflect"
@@ -41,7 +42,7 @@ func GetLocalEntity(id Eid) *Entity {
 	return ent
 }
 
-func RegisterEntity(entity interface{}) {
+func RegisterEntity(entity EntityType) {
 	entityValue := reflect.Indirect(reflect.ValueOf(entity))
 	entityType := entityValue.Type()
 	typeName := entityType.Name()

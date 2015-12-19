@@ -10,6 +10,6 @@ func main() {
 	fmt.Println("GetEntitiesRoot:", conf.GetEntitiesRoot())
 	fmt.Println("GetEntitiesConfigPath:", conf.GetEntitiesConfigPath())
 	fmt.Printf("ReadEntitiesConfig: \n%v\n", *conf.ReadEntitiesConfig())
-	// mapdConf := conf.ReadMapdConfig()
+	// mapdConf := conf.GetMapdConfig()
 	// fmt.Println("mapd config:\n", mapdConf)
 }

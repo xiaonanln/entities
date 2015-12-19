@@ -25,8 +25,9 @@ type EntitiesdConfig struct {
 }
 
 type EntitiesConfig struct {
-	Mapd      MapdConfig
-	Entitiesd []EntitiesdConfig
+	BootEntity string `json:"boot_entity"`
+	Mapd       MapdConfig
+	Entitiesd  []EntitiesdConfig
 }
 
 func GetExeFullPath() string {
@@ -74,7 +75,16 @@ func ReadEntitiesConfig() *EntitiesConfig {
 	return entitiesConfig
 }
 
-func ReadMapdConfig() *MapdConfig {
+func GetMapdConfig() *MapdConfig {
 	entitiesConfig := ReadEntitiesConfig()
 	return &entitiesConfig.Mapd
+}
+
+func GetBootEntity() string {
+	return ReadEntitiesConfig().BootEntity
+}
+
+func GetEntitiesdConfig(pid int) *EntitiesdConfig {
+	config := ReadEntitiesConfig()
+	return &config.Entitiesd[pid-1]
 }

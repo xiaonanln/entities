@@ -22,7 +22,7 @@ func main() {
 }
 
 func readConfig() {
-	mapdConfig = conf.ReadMapdConfig()
+	mapdConfig = conf.GetMapdConfig()
 	log.Printf("Using mapd config: %v\n", *mapdConfig)
 }
 
