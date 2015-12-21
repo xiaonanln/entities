@@ -8,19 +8,19 @@ import (
 )
 
 var (
-	mapping    = make(map[common.Eid]mapd.Pid)
+	mapping    = make(map[common.Eid]int)
 	lock       sync.RWMutex // only do locking in Caped functions
-	rpcClients = make(map[mapd.Pid]*mapd.ClientProxy)
+	rpcClients = make(map[int]*mapd.MapdClientProxy)
 )
 
-func AddRPCClient(client *mapd.ClientProxy, pid mapd.Pid) {
+func AddRPCClient(client *mapd.MapdClientProxy, pid int) {
 	lock.Lock()
 	defer lock.Unlock()
 
 	rpcClients[pid] = client
 }
 
-func DispatchRPC(eid common.Eid, method string, args []interface{}, fromPid mapd.Pid) {
+func DispatchRPC(eid common.Eid, method string, args []interface{}, fromPid int) {
 	log.Printf("DISPATCH >>> %s.%s%v", eid, method, args)
 	lock.RLock()
 	defer lock.RUnlock()
@@ -40,13 +40,13 @@ func DispatchRPC(eid common.Eid, method string, args []interface{}, fromPid mapd
 	}
 }
 
-func GetMapping(eid common.Eid, fromPid mapd.Pid) mapd.Pid {
+func GetMapping(eid common.Eid, fromPid int) int {
 	lock.RLock()
 	defer lock.RUnlock()
 	return getMapping(eid, fromPid)
 }
 
-func getMapping(eid common.Eid, fromPid mapd.Pid) mapd.Pid {
+func getMapping(eid common.Eid, fromPid int) int {
 	pid, ok := mapping[eid]
 	if ok {
 		return pid
@@ -56,7 +56,7 @@ func getMapping(eid common.Eid, fromPid mapd.Pid) mapd.Pid {
 	}
 }
 
-func SetMapping(eid common.Eid, pid mapd.Pid) {
+func SetMapping(eid common.Eid, pid int) {
 	lock.Lock()
 	defer lock.Unlock()
 

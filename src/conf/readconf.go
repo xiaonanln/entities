@@ -18,16 +18,21 @@ type MapdConfig struct {
 	RPCPort int `json:"rpc_port"`
 }
 
+type GatedConfig struct {
+	Host string
+	Port int
+}
+
 type EntitiesdConfig struct {
 	Host string
 	Port int
-	Pid  int
 }
 
 type EntitiesConfig struct {
 	BootEntity string `json:"boot_entity"`
 	Mapd       MapdConfig
 	Entitiesd  []EntitiesdConfig
+	Gated      []GatedConfig
 }
 
 func GetExeFullPath() string {
@@ -87,4 +92,9 @@ func GetBootEntity() string {
 func GetEntitiesdConfig(pid int) *EntitiesdConfig {
 	config := ReadEntitiesConfig()
 	return &config.Entitiesd[pid-1]
+}
+
+func GetGatedConfig(gid int) *GatedConfig {
+	config := ReadEntitiesConfig()
+	return &config.Gated[gid-1]
 }

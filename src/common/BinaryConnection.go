@@ -46,3 +46,12 @@ func (self BinaryConnection) SendInt64(val int64) error {
 	binary.LittleEndian.PutUint64(bytes, uint64(val))
 	return self.SendAll(bytes)
 }
+
+func (self BinaryConnection) RecvEid(eid *Eid) error {
+	err := self.RecvFixedLengthString(EID_LENGTH, (*string)(eid))
+	return err
+}
+
+func (self BinaryConnection) SendEid(eid Eid) error {
+	return self.SendFixedLengthString(string(eid))
+}

@@ -1,23 +1,37 @@
 package rpc
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"io"
 )
 
 type CustomRPCDecoder struct {
-	reader      io.Reader
-	jsonDecoder *json.Decoder
+	reader io.Reader
 }
 
 func NewCustomRPCDecoder(r io.Reader) *CustomRPCDecoder {
-	return &CustomRPCDecoder{reader: r, jsonDecoder: json.NewDecoder(r)}
+	return &CustomRPCDecoder{reader: r}
 }
 
 func (self *CustomRPCDecoder) Decode(eid *string, method *string, args *[]interface{}) error {
 	self.readString(eid)
 	self.readString(method)
-	return self.jsonDecoder.Decode(args)
+
+	lengthBytes := []byte{0, 0, 0, 0}
+	err := self.readAll(lengthBytes)
+	if err != nil {
+		return err
+	}
+
+	length := binary.LittleEndian.Uint32(lengthBytes)
+	argsBytes := make([]byte, length)
+	err = self.readAll(argsBytes)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(argsBytes, args)
 }
 
 func (self *CustomRPCDecoder) readString(s *string) error {

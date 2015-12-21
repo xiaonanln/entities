@@ -85,21 +85,21 @@ func serveCmdConnection(conn net.Conn) {
 	serveCmdMapdClient(client)
 }
 
-func serveCmdMapdClient(client *ClientProxy) {
+func serveCmdMapdClient(client *MapdClientProxy) {
 	defer serveCmdMapdClientDone(client)
 	for {
 		processNextCommand(client)
 	}
 }
 
-func serveCmdMapdClientDone(client *ClientProxy) {
+func serveCmdMapdClientDone(client *MapdClientProxy) {
 	if err := recover(); err != nil {
 		handleClientError(client, err)
 	}
 	log.Println("Connection closed:", client)
 }
 
-func handleClientError(client *ClientProxy, err interface{}) {
+func handleClientError(client *MapdClientProxy, err interface{}) {
 	normalClose := false
 	if _err := err.(error); _err != nil {
 		errorStr := _err.Error()

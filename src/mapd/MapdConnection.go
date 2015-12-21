@@ -7,13 +7,6 @@ import (
 	"rpc"
 )
 
-const (
-	MAPD_OP_QUERY  = 'R'
-	MAPD_OP_CREATE = 'C'
-)
-
-type Pid uint16
-
 type MapdConnection struct {
 	BinaryConnection
 	rpcEncoder rpc.RPCEncoder
@@ -37,24 +30,6 @@ func (self MapdConnection) SendCmd(cmd byte) error {
 	return self.SendByte(cmd)
 }
 
-func (self MapdConnection) RecvEid(eid *Eid) error {
-	err := self.RecvFixedLengthString(EID_LENGTH, (*string)(eid))
-	return err
-}
-
-func (self MapdConnection) SendEid(eid Eid) error {
-	return self.SendFixedLengthString(string(eid))
-}
-
-func (self MapdConnection) SendPid(pid Pid) error {
-	return self.SendUint16(uint16(pid))
-}
-
-func (self MapdConnection) RecvPid() (Pid, error) {
-	v, err := self.RecvUint16()
-	return Pid(v), err
-}
-
 func (self MapdConnection) SendReplyOk() error {
 	return self.SendByte(REPLY_OK)
 }
@@ -76,4 +51,13 @@ func (self MapdConnection) SendRPC(eid Eid, method string, args []interface{}) e
 
 func (self MapdConnection) RecvRPC(eid *Eid, method *string, args *[]interface{}) error {
 	return self.rpcDecoder.Decode((*string)(eid), method, args)
+}
+
+func (self MapdConnection) SendPid(pid int) error {
+	return self.SendUint16(uint16(pid))
+}
+
+func (self MapdConnection) RecvPid() (int, error) {
+	v, err := self.RecvUint16()
+	return int(v), err
 }

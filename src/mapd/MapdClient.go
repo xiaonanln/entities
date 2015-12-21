@@ -7,7 +7,7 @@ import (
 
 type MapdClient struct {
 	MapdConnection
-	pid Pid
+	pid int
 }
 
 func NewMapdClient(conn net.Conn) *MapdClient {
@@ -15,7 +15,7 @@ func NewMapdClient(conn net.Conn) *MapdClient {
 	return client
 }
 
-func (self *MapdClient) SetPid(pid Pid) error {
+func (self *MapdClient) SetPid(pid int) error {
 	self.pid = pid
 
 	self.SendCmd(CMD_PID)

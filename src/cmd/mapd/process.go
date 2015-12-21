@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func processNextCommand(client *ClientProxy) {
+func processNextCommand(client *MapdClientProxy) {
 	cmd, err := client.RecvCmd()
 	if err != nil {
 		panic(err)
@@ -29,7 +29,7 @@ func processNextCommand(client *ClientProxy) {
 	}
 }
 
-func processPid(client *ClientProxy) {
+func processPid(client *MapdClientProxy) {
 	pid, err := client.RecvPid()
 	if err != nil {
 		panic(err)
@@ -38,7 +38,7 @@ func processPid(client *ClientProxy) {
 	client.SendReplyOk()
 }
 
-func processQuery(client *ClientProxy) {
+func processQuery(client *MapdClientProxy) {
 	var eid Eid
 	err := client.RecvEid(&eid)
 	if err != nil {
@@ -49,7 +49,7 @@ func processQuery(client *ClientProxy) {
 	client.SendPid(pid)
 }
 
-func processSet(client *ClientProxy) {
+func processSet(client *MapdClientProxy) {
 	var eid Eid
 	err := client.RecvEid(&eid)
 	if err != nil {
@@ -60,12 +60,12 @@ func processSet(client *ClientProxy) {
 	log.Printf("SET %s => %d", eid, client.Pid)
 }
 
-func processSyncTime(client *ClientProxy) {
+func processSyncTime(client *MapdClientProxy) {
 	var nano int64 = time.Now().UnixNano()
 	client.SendInt64(nano)
 }
 
-func processLockEid(client *ClientProxy) {
+func processLockEid(client *MapdClientProxy) {
 	var eid Eid
 	err := client.RecvEid(&eid)
 	if err != nil {
@@ -75,7 +75,7 @@ func processLockEid(client *ClientProxy) {
 	// send lock ok when ready
 }
 
-func processRPC(client *ClientProxy) {
+func processRPC(client *MapdClientProxy) {
 	var eid Eid
 	var method string
 	var args []interface{}

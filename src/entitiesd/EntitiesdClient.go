@@ -1,12 +1,10 @@
 package entitiesd
 
-import "mapd"
-
 // EntitiesdClient for client-server communication
 type EntitiesdClient struct {
 }
 
-func NewEntitiesdClient(pid mapd.Pid) *EntitiesdClient {
+func NewEntitiesdClient(pid int) *EntitiesdClient {
 	// conf.GetEntitiesdConfig()
 	return nil
 }

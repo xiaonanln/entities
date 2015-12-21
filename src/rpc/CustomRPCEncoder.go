@@ -1,17 +1,17 @@
 package rpc
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"io"
 )
 
 type CustomRPCEncoder struct {
-	writer      io.Writer
-	jsonEncoder *json.Encoder
+	writer io.Writer
 }
 
 func NewCustomRPCEncoder(w io.Writer) *CustomRPCEncoder {
-	return &CustomRPCEncoder{writer: w, jsonEncoder: json.NewEncoder(w)}
+	return &CustomRPCEncoder{writer: w}
 }
 
 func (self *CustomRPCEncoder) writeString(s string) error {
@@ -35,12 +35,19 @@ func (self *CustomRPCEncoder) writeAll(buf []byte) error {
 }
 
 func (self *CustomRPCEncoder) writeByte(b byte) error {
-	buf := []byte{b}
-	return self.writeAll(buf)
+	return self.writeAll([]byte{b})
 }
 
 func (self *CustomRPCEncoder) Encode(eid string, method string, arguments []interface{}) error {
 	self.writeString(eid)
 	self.writeString(method)
-	return self.jsonEncoder.Encode(arguments)
+	bytes, err := json.Marshal(arguments)
+	if err != nil {
+		return err
+	}
+
+	lengthBytes := []byte{0, 0, 0, 0}
+	binary.LittleEndian.PutUint32(lengthBytes, uint32(len(bytes)))
+	self.writeAll(lengthBytes)
+	return self.writeAll(bytes)
 }
