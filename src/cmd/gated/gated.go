@@ -51,6 +51,7 @@ func serveConnectionService() {
 	if err != nil {
 		panic(err)
 	}
+
 	log.Println("Serving gated cmd service on", addr, "...")
 	for {
 		conn, err := servsock.Accept()
@@ -65,6 +66,8 @@ func serveConnectionService() {
 
 func serveClientConnection(conn net.Conn) {
 	gatedClient := gated.NewGatedClientProxy(conn)
+	onClientConnect(gatedClient)
+
 	for {
 		cmd, err := gatedClient.RecvCmd()
 		if err != nil {
@@ -82,6 +85,7 @@ func serveClientConnection(conn net.Conn) {
 				handleErrorAndDisconnect(gatedClient, err)
 				break
 			}
+			onClientCallRPC(gatedClient, eid, method, args)
 		}
 	}
 }

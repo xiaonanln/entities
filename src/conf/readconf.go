@@ -59,7 +59,7 @@ func GetEntitiesConfigPath() string {
 	return filepath.Join(entitiesRoot, "src", "conf", "entities.conf")
 }
 
-func ReadEntitiesConfig() *EntitiesConfig {
+func GetEntitiesConfig() *EntitiesConfig {
 	if entitiesConfig != nil {
 		return entitiesConfig
 	}
@@ -81,20 +81,20 @@ func ReadEntitiesConfig() *EntitiesConfig {
 }
 
 func GetMapdConfig() *MapdConfig {
-	entitiesConfig := ReadEntitiesConfig()
+	entitiesConfig := GetEntitiesConfig()
 	return &entitiesConfig.Mapd
 }
 
 func GetBootEntity() string {
-	return ReadEntitiesConfig().BootEntity
+	return GetEntitiesConfig().BootEntity
 }
 
 func GetEntitiesdConfig(pid int) *EntitiesdConfig {
-	config := ReadEntitiesConfig()
+	config := GetEntitiesConfig()
 	return &config.Entitiesd[pid-1]
 }
 
 func GetGatedConfig(gid int) *GatedConfig {
-	config := ReadEntitiesConfig()
+	config := GetEntitiesConfig()
 	return &config.Gated[gid-1]
 }
