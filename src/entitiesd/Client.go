@@ -1,0 +1,5 @@
+package entitiesd
+
+type Client {
+
+}

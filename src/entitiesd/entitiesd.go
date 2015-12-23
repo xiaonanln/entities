@@ -91,10 +91,26 @@ func handleNewClient(client *EntitiesdClientProxy) error {
 	if err != nil {
 		return err
 	}
+
 	log.Printf("%s: cid %s", client, cid)
+	boot := newBootEntity()
 	return nil
 }
 
 func handleRPC(client *EntitiesdClientProxy) error {
+	var eid Eid
+	var method string
+	var args []interface{}
+	err := client.RecvRPC(&eid, &method, &args)
+	if err != nil {
+		return err
+	}
+
+	// received rpc from gate
 	return nil
+}
+
+func newBootEntity() *entities.Entity {
+	config := conf.GetEntitiesConfig()
+	return NewEntity(config.BootEntity)
 }
