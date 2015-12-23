@@ -1,6 +1,7 @@
 package entitiesd
 
 import (
+	. "common"
 	"conf"
 	"entities"
 	"flag"
@@ -43,20 +44,57 @@ func runEntitiesdService() {
 	servsock, err := net.Listen("tcp", addr)
 
 	if err != nil {
-		panic(err)
+		log.Fatalf("Listen error: %s", err)
 	}
 
 	log.Println("Serving entitiesd service on", addr, "...")
 	for {
 		conn, err := servsock.Accept()
 		if err != nil {
-			panic(err)
+			log.Fatalf("Accept error: %s", err)
 		}
+
 		log.Println("New connection:", conn.RemoteAddr())
 		go serveClientConnection(conn)
 	}
 }
 
 func serveClientConnection(conn net.Conn) {
-	conn.Close()
+	client := NewEntitiesdClientProxy(conn)
+	defer client.Close()
+
+	for {
+		cmd, err := client.RecvCmd()
+		if err != nil {
+			HandleConnectionError(client, err)
+			break
+		}
+		switch cmd {
+		case CMD_NEW_CLIENT:
+			err = handleNewClient(client)
+		case CMD_RPC:
+			err = handleRPC(client)
+		default:
+			err = fmt.Errorf("Invalid cmd: %s", cmd)
+		}
+
+		if err != nil {
+			HandleConnectionError(client, err)
+			break
+		}
+	}
+}
+
+func handleNewClient(client *EntitiesdClientProxy) error {
+	var cid ClientId
+	err := client.RecvCid(&cid)
+	if err != nil {
+		return err
+	}
+	log.Printf("%s: cid %s", client, cid)
+	return nil
+}
+
+func handleRPC(client *EntitiesdClientProxy) error {
+	return nil
 }

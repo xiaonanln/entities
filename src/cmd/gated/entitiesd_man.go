@@ -4,6 +4,7 @@ import (
 	"common"
 	"conf"
 	"entitiesd"
+	"errors"
 	"gated"
 	"log"
 	"math/rand"
@@ -58,18 +59,17 @@ func chooseRandomEntitiesd() *entitiesd.EntitiesdClient {
 	return entitiesdClients[rand.Intn(len(entitiesdClients))]
 }
 
-func onClientConnect(client *gated.GatedClientProxy) {
+func onClientConnect(client *gated.GatedClientProxy) error {
 	// client connected, choose random entitiesd and tell it
 	entitiesd := chooseRandomEntitiesd()
 	if entitiesd == nil {
 		// connect to entitiesd failed, tell the gate client to shutdown
 		log.Printf("Found nil entitiesd, disconnecting client %s", client)
-		client.Close()
-		return
+		return errors.New("entitiesd is nil")
 	}
 
 	client.SetPid(entitiesd.Pid)
-	entitiesd.NewClient(client.Cid)
+	return entitiesd.NewClient(client.Cid)
 }
 
 func onClientCallRPC(client *gated.GatedClientProxy, eid common.Eid, method string, args []interface{}) {

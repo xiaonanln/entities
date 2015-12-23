@@ -66,12 +66,23 @@ func serveConnectionService() {
 
 func serveClientConnection(conn net.Conn) {
 	gatedClient := gated.NewGatedClientProxy(conn)
-	onClientConnect(gatedClient)
+	defer gatedClient.Close()
 
+	err := onClientConnect(gatedClient)
+	if err != nil {
+		handleClientError(gatedClient, err)
+		conn.Close()
+		return
+	}
+
+	serveClientConnectionLoop(gatedClient)
+}
+
+func serveClientConnectionLoop(gatedClient *gated.GatedClientProxy) {
 	for {
 		cmd, err := gatedClient.RecvCmd()
 		if err != nil {
-			handleErrorAndDisconnect(gatedClient, err)
+			handleClientError(gatedClient, err)
 			break
 		}
 
@@ -82,15 +93,18 @@ func serveClientConnection(conn net.Conn) {
 			var args []interface{}
 			err = gatedClient.RecvRPC(&eid, &method, &args)
 			if err != nil {
-				handleErrorAndDisconnect(gatedClient, err)
+				handleClientError(gatedClient, err)
 				break
 			}
 			onClientCallRPC(gatedClient, eid, method, args)
+		default:
+			log.Println("Invalid cmd: %s", cmd)
+			break
 		}
 	}
 }
 
-func handleErrorAndDisconnect(client *gated.GatedClientProxy, err interface{}) {
+func handleClientError(client *gated.GatedClientProxy, err interface{}) {
 	normalClose := false
 	if _err := err.(error); _err != nil {
 		errorStr := _err.Error()
@@ -102,5 +116,4 @@ func handleErrorAndDisconnect(client *gated.GatedClientProxy, err interface{}) {
 	if !normalClose {
 		log.Printf("ERROR: %s: %T %s", client, err, err)
 	}
-	client.Close()
 }

@@ -18,7 +18,7 @@ func NewEntitiesdClient(conn net.Conn, pid int) *EntitiesdClient {
 	}
 }
 
-func (self *EntitiesdClient) NewClient(cid common.ClientId) {
+func (self *EntitiesdClient) NewClient(cid common.ClientId) error {
 	self.SendCmd(CMD_NEW_CLIENT)
 	return self.SendCid(cid)
 }
