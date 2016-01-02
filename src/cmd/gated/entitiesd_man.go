@@ -13,7 +13,6 @@ import (
 
 var (
 	entitiesdClients []*entitiesd.EntitiesdClient
-	entitiesdConfigs []conf.EntitiesdConfig
 )
 
 func init() {
@@ -21,15 +20,13 @@ func init() {
 }
 
 func maintainEntitiesdConnections() {
-	config := conf.GetEntitiesConfig()
-	entitiesdConfigs = config.Entitiesd // copy config
-	log.Printf("found %d entitiesd", len(entitiesdConfigs))
-	entitiesdClients = make([]*entitiesd.EntitiesdClient, len(entitiesdConfigs))
+	log.Printf("found %d entitiesd", conf.GetEntitiesdCount())
+	entitiesdClients = make([]*entitiesd.EntitiesdClient, conf.GetEntitiesdCount())
 
 	for {
-		for i, _ := range entitiesdConfigs {
-			if entitiesdClients[i] == nil {
-				connectEntitiesd(i)
+		for i, client := range entitiesdClients {
+			if client == nil {
+				connectEntitiesd(i + 1)
 			}
 		}
 
@@ -38,8 +35,8 @@ func maintainEntitiesdConnections() {
 }
 
 func connectEntitiesd(pid int) {
-	config := entitiesdConfigs[pid]
-	log.Println("Connecting to entitiesd[%d] @ %s:%d", pid, config.Host, config.Port)
+	config := conf.GetEntitiesdConfig(pid)
+	log.Printf("Connecting to entitiesd[%d] @ %s:%d", pid, config.Host, config.Port)
 
 	conn, err := common.ConnectTCP(config.Host, config.Port)
 	if err != nil {
@@ -48,7 +45,13 @@ func connectEntitiesd(pid int) {
 	}
 
 	client := entitiesd.NewEntitiesdClient(conn, pid)
-	entitiesdClients[pid] = client
+	err = client.SendGid(gid)
+	if err != nil {
+		log.Printf("Send gid error: %s", err)
+		return
+	}
+
+	entitiesdClients[pid-1] = client
 	log.Printf("Connected successfully")
 }
 

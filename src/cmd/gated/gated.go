@@ -71,7 +71,6 @@ func serveClientConnection(conn net.Conn) {
 	err := onClientConnect(gatedClient)
 	if err != nil {
 		handleClientError(gatedClient, err)
-		conn.Close()
 		return
 	}
 

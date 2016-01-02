@@ -98,3 +98,13 @@ func GetGatedConfig(gid int) *GatedConfig {
 	config := GetEntitiesConfig()
 	return &config.Gated[gid-1]
 }
+
+func GetEntitiesdCount() int {
+	config := GetEntitiesConfig()
+	return len(config.Entitiesd)
+}
+
+func GetGatedCount() int {
+	config := GetEntitiesConfig()
+	return len(config.Gated)
+}

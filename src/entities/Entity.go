@@ -26,6 +26,7 @@ type Entity struct {
 	id         Eid
 	callQueue  chan *callQueueItem
 	realEntity reflect.Value
+	Client     Client
 }
 
 func (self *Entity) init(id Eid, realEntity reflect.Value) {
@@ -51,6 +52,14 @@ func (self *Entity) Call(id Eid, method string, args ...interface{}) {
 	}
 	// call the coordinator now...
 	log.Printf("entity %s not found, using coordinator...", id)
+}
+
+func (self *Entity) SetClient(client Client) {
+	if self.Client != nil {
+		self.Client.Close()
+	}
+
+	self.Client = client
 }
 
 func (self *Entity) routine() {

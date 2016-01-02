@@ -63,6 +63,24 @@ func serveClientConnection(conn net.Conn) {
 	client := NewEntitiesdClientProxy(conn)
 	defer client.Close()
 
+	gid, err := client.RecvGid()
+	if err != nil {
+		HandleConnectionError(client, err)
+		return
+	}
+
+	onNewGated(client, gid)
+
+	serveClientConnectionLoop(client)
+}
+
+func serveClientConnectionLoop(client *EntitiesdClientProxy) {
+	// defer func() {
+	// 	if err := recover(); err != nil {
+	// 		// recovered from error, restart service loop
+	// 		go serveClientConnectionLoop(client)
+	// 	}
+	// }()
 	for {
 		cmd, err := client.RecvCmd()
 		if err != nil {
@@ -85,23 +103,26 @@ func serveClientConnection(conn net.Conn) {
 	}
 }
 
-func handleNewClient(client *EntitiesdClientProxy) error {
+func handleNewClient(gated *EntitiesdClientProxy) error {
 	var cid ClientId
-	err := client.RecvCid(&cid)
+	err := gated.RecvCid(&cid)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("%s: cid %s", client, cid)
+	log.Printf("%s: cid %s", gated, cid)
 	boot := newBootEntity()
+
+	client := NewClient(gated.Gid, cid)
+	boot.SetClient(client)
 	return nil
 }
 
-func handleRPC(client *EntitiesdClientProxy) error {
+func handleRPC(gated *EntitiesdClientProxy) error {
 	var eid Eid
 	var method string
 	var args []interface{}
-	err := client.RecvRPC(&eid, &method, &args)
+	err := gated.RecvRPC(&eid, &method, &args)
 	if err != nil {
 		return err
 	}
