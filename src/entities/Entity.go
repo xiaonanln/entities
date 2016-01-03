@@ -26,7 +26,7 @@ type Entity struct {
 	id         Eid
 	callQueue  chan *callQueueItem
 	realEntity reflect.Value
-	Client     Client
+	Client     *Client
 }
 
 func (self *Entity) init(id Eid, realEntity reflect.Value) {
@@ -39,8 +39,12 @@ func (self *Entity) Id() Eid {
 	return self.id
 }
 
+func (self *Entity) EntityType() string {
+	return reflect.Indirect(self.realEntity).Type().Name()
+}
+
 func (self *Entity) String() string {
-	return fmt.Sprintf(`Entity<%s>`, self.id)
+	return fmt.Sprintf(`%s<%s>`, self.EntityType(), self.Id())
 }
 
 // call another entity
@@ -54,12 +58,15 @@ func (self *Entity) Call(id Eid, method string, args ...interface{}) {
 	log.Printf("entity %s not found, using coordinator...", id)
 }
 
-func (self *Entity) SetClient(client Client) {
+func (self *Entity) SetClient(client *Client) {
 	if self.Client != nil {
 		self.Client.Close()
 	}
 
 	self.Client = client
+	if self.Client != nil {
+		self.Client.NewEntity(self)
+	}
 }
 
 func (self *Entity) routine() {

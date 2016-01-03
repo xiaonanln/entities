@@ -113,8 +113,10 @@ func handleNewClient(gated *EntitiesdClientProxy) error {
 	log.Printf("%s: cid %s", gated, cid)
 	boot := newBootEntity()
 
-	client := NewClient(gated.Gid, cid)
+	clientRpcer := NewClientRPCProxy(gated.Gid, cid)
+	client := entities.NewClient(clientRpcer)
 	boot.SetClient(client)
+
 	return nil
 }
 

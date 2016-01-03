@@ -1,14 +1,13 @@
 package main
 
 import (
-	"common"
+	. "common"
 	"conf"
 	"flag"
 	"fmt"
 	"gated"
 	"log"
 	"net"
-	"strings"
 	"sync"
 )
 
@@ -70,7 +69,7 @@ func serveClientConnection(conn net.Conn) {
 
 	err := onClientConnect(gatedClient)
 	if err != nil {
-		handleClientError(gatedClient, err)
+		HandleConnectionError(gatedClient, err)
 		return
 	}
 
@@ -81,18 +80,18 @@ func serveClientConnectionLoop(gatedClient *gated.GatedClientProxy) {
 	for {
 		cmd, err := gatedClient.RecvCmd()
 		if err != nil {
-			handleClientError(gatedClient, err)
+			HandleConnectionError(gatedClient, err)
 			break
 		}
 
 		switch cmd {
 		case gated.CMD_RPC:
-			var eid common.Eid
+			var eid Eid
 			var method string
 			var args []interface{}
 			err = gatedClient.RecvRPC(&eid, &method, &args)
 			if err != nil {
-				handleClientError(gatedClient, err)
+				HandleConnectionError(gatedClient, err)
 				break
 			}
 			onClientCallRPC(gatedClient, eid, method, args)
@@ -100,19 +99,5 @@ func serveClientConnectionLoop(gatedClient *gated.GatedClientProxy) {
 			log.Println("Invalid cmd: %s", cmd)
 			break
 		}
-	}
-}
-
-func handleClientError(client *gated.GatedClientProxy, err interface{}) {
-	normalClose := false
-	if _err := err.(error); _err != nil {
-		errorStr := _err.Error()
-		if strings.Contains(errorStr, "EOF") || strings.Contains(errorStr, "closed") {
-			// just normal close
-			normalClose = true
-		}
-	}
-	if !normalClose {
-		log.Printf("ERROR: %s: %T %s", client, err, err)
 	}
 }

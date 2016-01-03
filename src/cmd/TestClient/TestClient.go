@@ -5,9 +5,11 @@ import (
 	"conf"
 	"flag"
 	"fmt"
+	"gated"
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 var (
@@ -32,7 +34,32 @@ func main() {
 	}
 
 	log.Printf("Connect successfully")
+	client := gated.NewGatedClient(conn)
 
+	go sendRoutine(client)
+	receiveRoutine(client)
+	client.Close()
+}
+
+func receiveRoutine(client *gated.GatedClient) {
+	for {
+		var eid Eid
+		var method string
+		var args []interface{}
+		err := client.RecvRPC(&eid, &method, &args)
+		if err != nil {
+			HandleConnectionError(client, err)
+			break
+		}
+
+		log.Printf("RECV RPC: %s.%s%v", eid, method, args)
+	}
+}
+
+func sendRoutine(client *gated.GatedClient) {
+	for {
+		time.Sleep(time.Second * 3)
+	}
 }
 
 func parseArguments() {
