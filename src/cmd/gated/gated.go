@@ -8,6 +8,7 @@ import (
 	"gated"
 	"log"
 	"net"
+	_ "setup"
 	"sync"
 )
 
@@ -16,6 +17,10 @@ var (
 	gatedConfig  *conf.GatedConfig
 	waitServices = sync.WaitGroup{}
 )
+
+func init() {
+	log.Println("gated main init...")
+}
 
 func main() {
 	parseArguments()

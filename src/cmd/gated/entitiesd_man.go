@@ -8,6 +8,7 @@ import (
 	"gated"
 	"log"
 	"math/rand"
+	"setup"
 	"time"
 )
 
@@ -16,7 +17,9 @@ var (
 )
 
 func init() {
-	go maintainEntitiesdConnections()
+	if setup.IsGated() {
+		go maintainEntitiesdConnections()
+	}
 }
 
 func maintainEntitiesdConnections() {
@@ -72,7 +75,7 @@ func onClientConnect(client *gated.GatedClientProxy) error {
 	}
 
 	client.SetPid(entitiesd.Pid)
-	return entitiesd.NewClient(client.Cid)
+	return entitiesd.NewClient(client.ClientId)
 }
 
 func onClientCallRPC(client *gated.GatedClientProxy, eid common.Eid, method string, args []interface{}) {
@@ -82,5 +85,5 @@ func onClientCallRPC(client *gated.GatedClientProxy, eid common.Eid, method stri
 		return
 	}
 
-	entitiesd.RPC(eid, method, args)
+	entitiesd.RPC(client.ClientId, eid, method, args)
 }

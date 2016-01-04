@@ -54,7 +54,8 @@ func (self EntitiesdConnection) RecvCid(cid *ClientId) error {
 	return self.RecvFixedLengthString(EID_LENGTH, (*string)(cid))
 }
 
-func (self EntitiesdConnection) RPC(eid Eid, method string, args []interface{}) error {
+func (self EntitiesdConnection) RPC(clientid ClientId, eid Eid, method string, args []interface{}) error {
 	self.SendCmd(CMD_RPC)
+	self.SendCid(clientid) // different from other RPC methods
 	return self.SendRPC(eid, method, args)
 }

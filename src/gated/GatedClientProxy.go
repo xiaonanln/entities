@@ -7,15 +7,15 @@ import (
 
 type GatedClientProxy struct {
 	GatedConnection
-	Cid common.ClientId
-	Pid int
+	ClientId common.ClientId
+	Pid      int
 }
 
 func NewGatedClientProxy(conn net.Conn) *GatedClientProxy {
 	cid := common.NewClientId()
 	return &GatedClientProxy{
 		GatedConnection: NewGatedConnection(conn),
-		Cid:             cid,
+		ClientId:        cid,
 		Pid:             0, // initially no pid
 	}
 }
