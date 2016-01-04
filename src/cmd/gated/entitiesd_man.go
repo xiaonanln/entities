@@ -1,7 +1,7 @@
 package main
 
 import (
-	"common"
+	. "common"
 	"conf"
 	"entitiesd"
 	"errors"
@@ -41,7 +41,7 @@ func connectEntitiesd(pid int) {
 	config := conf.GetEntitiesdConfig(pid)
 	log.Printf("Connecting to entitiesd[%d] @ %s:%d", pid, config.Host, config.Port)
 
-	conn, err := common.ConnectTCP(config.Host, config.Port)
+	conn, err := ConnectTCP(config.Host, config.Port)
 	if err != nil {
 		log.Printf("Connect error: %s", err)
 		return
@@ -55,19 +55,37 @@ func connectEntitiesd(pid int) {
 	}
 
 	entitiesdClients[pid-1] = client
+	go serviceEntitiesdClient(client)
+
 	log.Printf("Connected successfully")
 }
 
-func chooseRandomEntitiesd() *entitiesd.EntitiesdClient {
-	if len(entitiesdClients) == 0 {
-		return nil
+func serviceEntitiesdClient(client *entitiesd.EntitiesdClient) {
+	for {
+		cmd, err := client.RecvCmd()
+		if err != nil {
+			HandleConnectionError(client, err)
+			break
+		}
+
+		switch cmd {
+		case entitiesd.CMD_NEW_ENTITY:
+			handleNewEntity(client)
+		}
 	}
-	return entitiesdClients[rand.Intn(len(entitiesdClients))]
+}
+
+func chooseRandomEntitiesd() (int, *entitiesd.EntitiesdClient) {
+	if len(entitiesdClients) == 0 {
+		return -1, nil
+	}
+	i := rand.Intn(len(entitiesdClients))
+	return i, entitiesdClients[i]
 }
 
 func onClientConnect(client *gated.GatedClientProxy) error {
 	// client connected, choose random entitiesd and tell it
-	entitiesd := chooseRandomEntitiesd()
+	pid, entitiesd := chooseRandomEntitiesd()
 	if entitiesd == nil {
 		// connect to entitiesd failed, tell the gate client to shutdown
 		log.Printf("Found nil entitiesd, disconnecting client %s", client)
@@ -75,15 +93,27 @@ func onClientConnect(client *gated.GatedClientProxy) error {
 	}
 
 	client.SetPid(entitiesd.Pid)
-	return entitiesd.NewClient(client.ClientId)
+	err := entitiesd.NewClient(client.ClientId)
+	if err != nil {
+		entitiesdClientOnError(pid, entitiesd, err)
+	}
+	return err
 }
 
-func onClientCallRPC(client *gated.GatedClientProxy, eid common.Eid, method string, args []interface{}) {
+func onClientCallRPC(client *gated.GatedClientProxy, eid Eid, method string, args []interface{}) error {
 	entitiesd := entitiesdClients[client.Pid]
 	if entitiesd == nil {
 		log.Printf("Found nil entitiesd %d, RPC dropped", client.Pid)
-		return
+		return errors.New("entitiesd is nil")
 	}
 
-	entitiesd.RPC(client.ClientId, eid, method, args)
+	err := entitiesd.RPC(client.ClientId, eid, method, args)
+	if err != nil {
+		entitiesdClientOnError(client.Pid, entitiesd, err)
+	}
+	return err
+}
+
+func entitiesdClientOnError(pid int, entitiesd *entitiesd.EntitiesdClient, err error) {
+	entitiesdClients[pid] = nil
 }

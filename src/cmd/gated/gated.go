@@ -99,7 +99,11 @@ func serveClientConnectionLoop(gatedClient *gated.GatedClientProxy) {
 				HandleConnectionError(gatedClient, err)
 				break
 			}
-			onClientCallRPC(gatedClient, eid, method, args)
+			err = onClientCallRPC(gatedClient, eid, method, args)
+			if err != nil {
+				HandleConnectionError(gatedClient, err)
+				break
+			}
 		default:
 			log.Println("Invalid cmd: %s", cmd)
 			break

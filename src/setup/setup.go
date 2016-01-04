@@ -3,7 +3,7 @@ package setup
 import (
 	"log"
 	"os"
-	"path"
+	"strings"
 )
 
 const (
@@ -19,17 +19,18 @@ var (
 
 func init() {
 	exePath := os.Args[0]
-	exeName := path.Base(exePath)
-	if exeName == "entitiesd" {
+
+	// fixme : use better method
+	if strings.HasSuffix(exePath, "entitiesd") || strings.HasSuffix(exePath, "entitiesd.exe") {
 		role = ENTITIESD
-	} else if exeName == "gated" {
+	} else if strings.HasSuffix(exePath, "gated") || strings.HasSuffix(exePath, "gated.exe") {
 		role = GATED
-	} else if exeName == "mapd" {
+	} else if strings.HasSuffix(exePath, "mapd") || strings.HasSuffix(exePath, "mapd.exe") {
 		role = MAPD
 	} else {
 	}
 
-	log.Printf("Setup %s to be role %d.", exeName, role)
+	log.Printf("Setup %s to be role %d.", exePath, role)
 }
 
 func GetRole() int {

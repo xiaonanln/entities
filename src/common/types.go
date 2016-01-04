@@ -9,3 +9,6 @@ const (
 func NewClientId() ClientId {
 	return ClientId(NewEid())
 }
+func (self ClientId) String() string {
+	return Eid(self).String()
+}

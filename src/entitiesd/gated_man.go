@@ -59,13 +59,13 @@ func onNewGated(gated *EntitiesdClientProxy, gid int) {
 
 func getGated(gid int) *EntitiesdClientProxy {
 	addr := unsafe.Pointer(&gateds[gid-1])
-	ptr := atomic.LoadPointer(&addr)
+	ptr := atomic.LoadPointer((*unsafe.Pointer)(addr))
 	return (*EntitiesdClientProxy)(ptr)
 }
 
 func setGated(gid int, gated *EntitiesdClientProxy) {
 	addr := unsafe.Pointer(&gateds[gid-1])
-	atomic.StorePointer(&addr, unsafe.Pointer(gated))
+	atomic.StorePointer((*unsafe.Pointer)(addr), unsafe.Pointer(gated))
 }
 
 func onCallClient(gid int, clientid ClientId, eid Eid, method string, args []interface{}) {
