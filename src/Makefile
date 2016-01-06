@@ -1,2 +1,2 @@
 all:
-	gb build
+	gbbuild

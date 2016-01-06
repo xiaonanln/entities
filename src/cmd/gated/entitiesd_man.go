@@ -71,6 +71,8 @@ func serviceEntitiesdClient(client *entitiesd.EntitiesdClient) {
 		switch cmd {
 		case entitiesd.CMD_NEW_ENTITY:
 			handleNewEntity(client)
+		case entitiesd.CMD_DEL_ENTITY:
+			handleDelEntity(client)
 		}
 	}
 }

@@ -20,3 +20,15 @@ func handleNewEntity(client *entitiesd.EntitiesdClient) error {
 	log.Printf("handleNewEntity to %s, creating %s<%s>", clientid, entityType, eid)
 	return nil
 }
+
+func handleDelEntity(client *entitiesd.EntitiesdClient) error {
+	var clientid ClientId
+	var eid Eid
+	client.RecvCid(&clientid)
+	if err := client.RecvEid(&eid); err != nil {
+		return err
+	}
+
+	log.Printf("handleDelEntity to %s, deleting %s", clientid, eid)
+	return nil
+}
