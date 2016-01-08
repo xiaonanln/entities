@@ -60,23 +60,6 @@ func connectEntitiesd(pid int) {
 	log.Printf("Connected successfully")
 }
 
-func serviceEntitiesdClient(client *entitiesd.EntitiesdClient) {
-	for {
-		cmd, err := client.RecvCmd()
-		if err != nil {
-			HandleConnectionError(client, err)
-			break
-		}
-
-		switch cmd {
-		case entitiesd.CMD_NEW_ENTITY:
-			handleNewEntity(client)
-		case entitiesd.CMD_DEL_ENTITY:
-			handleDelEntity(client)
-		}
-	}
-}
-
 func chooseRandomEntitiesd() (int, *entitiesd.EntitiesdClient) {
 	if len(entitiesdClients) == 0 {
 		return -1, nil

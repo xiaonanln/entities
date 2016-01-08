@@ -28,3 +28,8 @@ func HandleConnectionError(conn interface{}, err interface{}) {
 		log.Println("Connection closed:", conn)
 	}
 }
+
+func IsNetworkError(err error) bool {
+	_, ok := err.(net.Error)
+	return ok
+}

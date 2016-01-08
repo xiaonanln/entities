@@ -1,18 +1,18 @@
 package gated
 
 import (
-	"common"
+	. "common"
 	"net"
 )
 
 type GatedClientProxy struct {
 	GatedConnection
-	ClientId common.ClientId
+	ClientId ClientId
 	Pid      int
 }
 
 func NewGatedClientProxy(conn net.Conn) *GatedClientProxy {
-	cid := common.NewClientId()
+	cid := NewClientId()
 	return &GatedClientProxy{
 		GatedConnection: NewGatedConnection(conn),
 		ClientId:        cid,
@@ -22,4 +22,7 @@ func NewGatedClientProxy(conn net.Conn) *GatedClientProxy {
 
 func (self *GatedClientProxy) SetPid(pid int) {
 	self.Pid = pid
+}
+
+func (self *GatedClientProxy) NewEntity(eid Eid, entityType string) {
 }

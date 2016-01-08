@@ -72,6 +72,10 @@ func serveClientConnection(conn net.Conn) {
 	gatedClient := gated.NewGatedClientProxy(conn)
 	defer gatedClient.Close()
 
+	// put gated to dispatcher
+	dispatchAddNewClient(gatedClient)
+	defer dispatchOnClientClose(gatedClient)
+
 	err := onClientConnect(gatedClient)
 	if err != nil {
 		HandleConnectionError(gatedClient, err)
