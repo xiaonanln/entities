@@ -3,6 +3,12 @@ package entities
 import (
 	. "common"
 	"log"
+	"sync"
+)
+
+var (
+	clientsLock sync.RWMutex
+	clients     = make(map[ClientId]*Client)
 )
 
 type ClientRPCer interface {
@@ -13,13 +19,19 @@ type ClientRPCer interface {
 }
 
 type Client struct {
-	rpcer ClientRPCer
+	clientid ClientId
+	rpcer    ClientRPCer
 }
 
-func NewClient(rpcer ClientRPCer) *Client {
-	return &Client{
-		rpcer: rpcer,
+func NewClient(clientid ClientId, rpcer ClientRPCer) *Client {
+	client := &Client{
+		clientid: clientid,
+		rpcer:    rpcer,
 	}
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+	clients[clientid] = client
+	return client
 }
 
 func (self *Client) Close() {

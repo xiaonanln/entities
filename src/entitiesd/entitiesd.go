@@ -87,6 +87,7 @@ func serveClientConnectionLoop(client *EntitiesdClientProxy) {
 			HandleConnectionError(client, err)
 			break
 		}
+		log.Printf("%s >>> cmd %v", client, cmd)
 		switch cmd {
 		case CMD_NEW_CLIENT:
 			err = handleNewClient(client)
@@ -104,33 +105,39 @@ func serveClientConnectionLoop(client *EntitiesdClientProxy) {
 }
 
 func handleNewClient(gated *EntitiesdClientProxy) error {
-	var cid ClientId
-	err := gated.RecvCid(&cid)
+	var clientid ClientId
+	err := gated.RecvCid(&clientid)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("%s: cid %s", gated, cid)
+	log.Printf("%s: clientid %s", gated, clientid)
 	boot := newBootEntity()
 
-	clientRpcer := NewClientRPCProxy(gated.Gid, cid)
-	client := entities.NewClient(clientRpcer)
+	clientRpcer := NewClientRPCProxy(gated.Gid, clientid)
+	client := entities.NewClient(clientid, clientRpcer)
 	boot.SetClient(client)
 
 	return nil
 }
 
 func handleRPC(gated *EntitiesdClientProxy) error {
+	var clientid ClientId
 	var eid Eid
 	var method string
 	var args []interface{}
+
+	gated.RecvCid(&clientid)
+
 	err := gated.RecvRPC(&eid, &method, &args)
 	if err != nil {
 		return err
 	}
 
 	// received rpc from gate
-	log.Printf("RPC >>> %s.%s%v", eid, method, args)
+	log.Printf("Client %s >>> %s.%s%v", clientid, eid, method, args)
+	entities.OnCall(clientid, eid, method, args)
+
 	return nil
 }
 

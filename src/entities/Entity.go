@@ -49,13 +49,17 @@ func (self *Entity) String() string {
 
 // call another entity
 func (self *Entity) Call(id Eid, method string, args ...interface{}) {
-	entity := GetLocalEntity(id)
+	entity := getEntity(id)
 	if entity != nil {
-		entity.callQueue <- &callQueueItem{src: self.id, method: method, args: args} // push call to call queue
+		entity.pushCall(self.id, method, args)
 		return
 	}
 	// call the coordinator now...
 	log.Printf("entity %s not found, using coordinator...", id)
+}
+
+func (self *Entity) pushCall(srcId Eid, method string, args []interface{}) {
+	self.callQueue <- &callQueueItem{src: srcId, method: method, args: args} // push call to call queue
 }
 
 func (self *Entity) SetClient(client *Client) {

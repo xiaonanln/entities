@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"sync"
 )
 
 const (
@@ -12,6 +13,7 @@ const (
 )
 
 var (
+	entitiesLock          sync.RWMutex
 	entities              = make(map[Eid]*Entity)
 	registeredEntityTypes = make(map[string]reflect.Type)
 )
@@ -34,12 +36,20 @@ func NewEntity(entityTypeName string) *Entity {
 	return entity
 }
 
-func GetLocalEntity(id Eid) *Entity {
-	ent, ok := entities[id]
-	if !ok {
-		return nil
+func getEntity(id Eid) *Entity {
+	entitiesLock.RLock()
+	defer entitiesLock.RUnlock()
+	return entities[id]
+}
+
+func putEntity(entity *Entity) {
+	entitiesLock.Lock()
+	defer entitiesLock.Unlock()
+	if _, ok := entities[entity.id]; ok {
+		log.Panicf("entity %s already exists", entity.id)
 	}
-	return ent
+
+	entities[entity.id] = entity
 }
 
 func RegisterEntity(entity EntityType) {
@@ -59,6 +69,16 @@ func RegisterEntity(entity EntityType) {
 	registeredEntityTypes[typeName] = entityType
 	log.Printf("entity type %s registered successfully: %v", typeName, entityType)
 	// fmt.Println(entityValue, entityField, entityField.IsValid())
+}
+
+func OnCall(clientid ClientId, eid Eid, method string, args []interface{}) {
+	entity := getEntity(eid)
+	if entity == nil {
+		log.Printf("entity %s not found when calling %s%v", eid, method, args)
+		return
+	}
+
+	entity.pushCall(eid, method, args) // calling from client is calling from self
 }
 
 // func setLocalEntity(ent *Entity) {
