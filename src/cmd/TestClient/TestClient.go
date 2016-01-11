@@ -13,7 +13,10 @@ import (
 )
 
 var (
-	gid int
+	accountId Eid
+	avatarId  Eid
+	logined   bool
+	gid       int
 )
 
 func main() {
@@ -43,22 +46,83 @@ func main() {
 
 func receiveRoutine(client *gated.GatedClient) {
 	for {
-		var eid Eid
-		var method string
-		var args []interface{}
-		err := client.RecvRPC(&eid, &method, &args)
+		cmd, err := client.RecvCmd()
 		if err != nil {
 			HandleConnectionError(client, err)
 			break
 		}
 
-		log.Printf("RECV RPC: %s.%s%v", eid, method, args)
+		log.Printf("Received cmd: %v", cmd)
+
+		switch cmd {
+		case gated.CMD_NEW_ENTITY:
+			handleNewEntity(client)
+		case gated.CMD_DEL_ENTITY:
+			handleDelEntity(client)
+		case gated.CMD_RPC:
+			handleRPC(client)
+		default:
+			log.Printf("unknown cmd: %v", cmd)
+			client.Close()
+			break
+		}
+		// var eid Eid
+		// var method string
+		// var args []interface{}
+		// err = client.RecvRPC(&eid, &method, &args)
+		// if err != nil {
+		// 	HandleConnectionError(client, err)
+		// 	break
+		// }
+
+		// log.Printf("RECV RPC: %s.%s%v", eid, method, args)
 	}
+}
+
+func handleNewEntity(client *gated.GatedClient) error {
+	var eid Eid
+	var entityType string
+	client.RecvEid(&eid)
+	if err := client.RecvString(&entityType); err != nil {
+		return err
+	}
+	log.Printf("NewEntity: %s, entityType %s", eid, entityType)
+	if entityType == "Account" {
+		accountId = eid
+	} else if entityType == "Avatar" {
+		avatarId = eid
+	} else {
+		log.Printf("invalid entity type: %s", entityType)
+	}
+	return nil
+}
+
+func handleDelEntity(client *gated.GatedClient) error {
+	var eid Eid
+	if err := client.RecvEid(&eid); err != nil {
+		return err
+	}
+	log.Printf("DelEntity: %s", eid)
+	return nil
+}
+
+func handleRPC(client *gated.GatedClient) error {
+	var eid Eid
+	var method string
+	var args []interface{}
+	if err := client.RecvRPC(&eid, &method, &args); err != nil {
+		return err
+	}
+	log.Printf("RecvRPC: %s.%s%v", eid, method, args)
+	return nil
 }
 
 func sendRoutine(client *gated.GatedClient) {
 	for {
 		time.Sleep(time.Second * 3)
+		if !logined && accountId != "" {
+			client.Call(accountId, "login", "test", "test")
+		}
 	}
 }
 

@@ -130,6 +130,7 @@ func handleRPC(gated *EntitiesdClientProxy) error {
 	}
 
 	// received rpc from gate
+	log.Printf("RPC >>> %s.%s%v", eid, method, args)
 	return nil
 }
 

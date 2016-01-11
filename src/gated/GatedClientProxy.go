@@ -24,5 +24,13 @@ func (self *GatedClientProxy) SetPid(pid int) {
 	self.Pid = pid
 }
 
-func (self *GatedClientProxy) NewEntity(eid Eid, entityType string) {
+func (self *GatedClientProxy) NewEntity(eid Eid, entityType string) error {
+	self.SendCmd(CMD_NEW_ENTITY)
+	self.SendEid(eid)
+	return self.SendString(entityType)
+}
+
+func (self *GatedClientProxy) DelEntity(eid Eid) error {
+	self.SendCmd(CMD_DEL_ENTITY)
+	return self.SendEid(eid)
 }

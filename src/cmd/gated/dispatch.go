@@ -14,7 +14,7 @@ type clientSendOp struct {
 
 var (
 	clientsAccessLock sync.RWMutex
-	clients           map[ClientId]*GatedClientProxy
+	clients           = make(map[ClientId]*GatedClientProxy)
 	clientSendOps     = make(chan clientSendOp)
 )
 
@@ -44,14 +44,34 @@ func dispatchOnClientClose(client *GatedClientProxy) {
 	delete(clients, client.ClientId)
 }
 
-func dispatchNewEntityToClient(clientid ClientId, eid Eid, entityType string) {
+func dispatchNewEntityToClient(clientid ClientId, eid Eid, entityType string) error {
 	clientSendOps <- clientSendOp{
 		opfunc: func(client *GatedClientProxy) error {
-			return nil
+			return client.NewEntity(eid, entityType)
 		},
 		clientid: clientid,
 	}
+	return nil
+}
 
+func dispatchDelEntityToClient(clientid ClientId, eid Eid) error {
+	clientSendOps <- clientSendOp{
+		opfunc: func(client *GatedClientProxy) error {
+			return client.DelEntity(eid)
+		},
+		clientid: clientid,
+	}
+	return nil
+}
+
+func dispatchRPCToClient(clientid ClientId, eid Eid, method string, args []interface{}) error {
+	clientSendOps <- clientSendOp{
+		opfunc: func(client *GatedClientProxy) error {
+			return client.RPC(eid, method, args)
+		},
+		clientid: clientid,
+	}
+	return nil
 }
 
 func dispatcher() {

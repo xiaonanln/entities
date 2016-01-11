@@ -46,8 +46,7 @@ func handleNewEntity(client *entitiesd.EntitiesdClient) error {
 		return err
 	}
 	log.Printf("handleNewEntity to %s, creating %s<%s>", clientid, entityType, eid)
-	dispatchNewEntityToClient(clientid, eid, entityType)
-	return nil
+	return dispatchNewEntityToClient(clientid, eid, entityType)
 }
 
 func handleDelEntity(client *entitiesd.EntitiesdClient) error {
@@ -59,7 +58,7 @@ func handleDelEntity(client *entitiesd.EntitiesdClient) error {
 	}
 
 	log.Printf("handleDelEntity to %s, deleting %s", clientid, eid)
-	return nil
+	return dispatchDelEntityToClient(clientid, eid)
 }
 
 func handleRPCToClient(client *entitiesd.EntitiesdClient) error {
@@ -73,5 +72,5 @@ func handleRPCToClient(client *entitiesd.EntitiesdClient) error {
 		return err
 	}
 	log.Printf("handleRPCToClient %s.%s, calling %s%v", clientid, eid, method, args)
-	return nil
+	return dispatchRPCToClient(clientid, eid, method, args)
 }

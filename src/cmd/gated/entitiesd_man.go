@@ -65,7 +65,7 @@ func chooseRandomEntitiesd() (int, *entitiesd.EntitiesdClient) {
 		return -1, nil
 	}
 	i := rand.Intn(len(entitiesdClients))
-	return i, entitiesdClients[i]
+	return i + 1, entitiesdClients[i]
 }
 
 func onClientConnect(client *gated.GatedClientProxy) error {
@@ -86,7 +86,8 @@ func onClientConnect(client *gated.GatedClientProxy) error {
 }
 
 func onClientCallRPC(client *gated.GatedClientProxy, eid Eid, method string, args []interface{}) error {
-	entitiesd := entitiesdClients[client.Pid]
+	log.Printf("RPC from client %s: %s.%s%v", client, eid, method, args)
+	entitiesd := entitiesdClients[client.Pid-1]
 	if entitiesd == nil {
 		log.Printf("Found nil entitiesd %d, RPC dropped", client.Pid)
 		return errors.New("entitiesd is nil")
@@ -100,5 +101,5 @@ func onClientCallRPC(client *gated.GatedClientProxy, eid Eid, method string, arg
 }
 
 func entitiesdClientOnError(pid int, entitiesd *entitiesd.EntitiesdClient, err error) {
-	entitiesdClients[pid] = nil
+	entitiesdClients[pid-1] = nil
 }
