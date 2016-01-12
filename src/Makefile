@@ -1,2 +1,2 @@
 all:
-	gbbuild
+	@python ../bin/gbbuild.py

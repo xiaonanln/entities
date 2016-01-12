@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"runtime/debug"
 )
 
 type callQueueItem struct {
@@ -73,6 +74,19 @@ func (self *Entity) SetClient(client *Client) {
 	}
 }
 
+func (self *Entity) GiveClientTo(other *Entity) {
+	if self.Client == nil {
+		return
+	}
+
+	client := self.Client
+	self.Client = nil
+	client.DelEntity(self.id)
+
+	other.SetClient(client)
+	return
+}
+
 func (self *Entity) routine() {
 	for {
 		call := <-self.callQueue
@@ -86,6 +100,7 @@ func (self *Entity) handleCall(call *callQueueItem) {
 		if err := recover(); err != nil {
 			// error recovered in handleCall
 			log.Printf("%s failed: %s", call, err)
+			debug.PrintStack()
 		}
 	}()
 	method := self.realEntity.MethodByName(call.method)

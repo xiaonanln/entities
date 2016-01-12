@@ -24,6 +24,7 @@ func init() {
 
 func main() {
 	parseArguments()
+	log.SetPrefix(fmt.Sprintf("gated-%d ", gid))
 	readConfig()
 	startGatedServices()
 	waitServices.Wait()

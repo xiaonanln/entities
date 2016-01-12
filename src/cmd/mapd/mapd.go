@@ -16,6 +16,8 @@ var (
 )
 
 func main() {
+	log.SetPrefix("mapd ")
+
 	readConfig()
 	startMapdServices()
 	waitServices.Wait()

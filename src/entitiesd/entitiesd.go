@@ -25,6 +25,7 @@ func NewEntity(entityType string) *entities.Entity {
 func Run() {
 	log.Println("Starting entitiesd service ...")
 	parseArguments()
+	log.SetPrefix(fmt.Sprintf("entitiesd-%d ", pid))
 	runEntitiesdService()
 }
 

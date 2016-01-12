@@ -15,7 +15,6 @@ import (
 var (
 	accountId Eid
 	avatarId  Eid
-	logined   bool
 	gid       int
 )
 
@@ -103,6 +102,13 @@ func handleDelEntity(client *gated.GatedClient) error {
 		return err
 	}
 	log.Printf("DelEntity: %s", eid)
+	if accountId == eid {
+		accountId = ""
+		log.Println("Account destroyed")
+	} else if avatarId == eid {
+		avatarId = ""
+		log.Println("Avatar destroyed")
+	}
 	return nil
 }
 
@@ -120,9 +126,17 @@ func handleRPC(client *gated.GatedClient) error {
 func sendRoutine(client *gated.GatedClient) {
 	for {
 		time.Sleep(time.Second * 3)
-		if !logined && accountId != "" {
-			client.Call(accountId, "login", "test", "test")
+		if avatarId == "" && accountId != "" {
+			client.Call(accountId, "Login", "test", "test")
+			continue
 		}
+
+		if avatarId != "" {
+			client.Call(avatarId, "Test", 1, 2, "s")
+			continue
+		}
+
+		log.Println("Found no account and no avatar, do't know what to do ...")
 	}
 }
 
