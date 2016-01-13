@@ -71,7 +71,14 @@ func serveConnectionService() {
 
 func serveClientConnection(conn net.Conn) {
 	gatedClient := gated.NewGatedClientProxy(conn)
-	defer gatedClient.Close()
+	defer func() {
+		gatedClient.Close()
+		if gatedClient.ClientId != "" {
+			if err := letClientDisconnectEntitiesd(gatedClient); err != nil {
+				log.Printf("Client %s disconnect error: %s", gatedClient, err)
+			}
+		}
+	}()
 
 	// put gated to dispatcher
 	dispatchAddNewClient(gatedClient)

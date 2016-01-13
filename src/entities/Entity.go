@@ -64,7 +64,10 @@ func (self *Entity) pushCall(srcId Eid, method string, args []interface{}) {
 }
 
 func (self *Entity) SetClient(client *Client) {
+	oldClient := self.Client
+
 	if self.Client != nil {
+		self.Client.owner = ""
 		self.Client.Close()
 	}
 
@@ -73,19 +76,36 @@ func (self *Entity) SetClient(client *Client) {
 		client.owner = self.id
 		client.NewEntity(self)
 	}
+
+	if oldClient != nil && client == nil {
+		self.onLoseClient(oldClient)
+	} else if oldClient == nil && client != nil {
+		self.onGetClient()
+	}
 }
 
 func (self *Entity) GiveClientTo(other *Entity) {
-	if self.Client == nil {
+	if self.Client == nil || self == other {
 		return
 	}
 
 	client := self.Client
+	client.owner = ""
 	self.Client = nil
+
 	client.DelEntity(self.id)
+	self.onLoseClient(client)
 
 	other.SetClient(client)
 	return
+}
+
+func (self *Entity) onGetClient() {
+	log.Printf("Entity %s get client %s", self, self.Client)
+}
+
+func (self *Entity) onLoseClient(oldClient *Client) {
+	log.Printf("Entity %s lose client %s", self, oldClient)
 }
 
 func (self *Entity) routine() {

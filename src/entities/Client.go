@@ -2,6 +2,7 @@ package entities
 
 import (
 	. "common"
+	"conf"
 	"log"
 	"sync"
 )
@@ -24,7 +25,7 @@ type Client struct {
 	owner    Eid
 }
 
-func NewClient(clientid ClientId, rpcer ClientRPCer) *Client {
+func newClient(clientid ClientId, rpcer ClientRPCer) *Client {
 	client := &Client{
 		clientid: clientid,
 		rpcer:    rpcer,
@@ -33,6 +34,12 @@ func NewClient(clientid ClientId, rpcer ClientRPCer) *Client {
 	defer clientsLock.Unlock()
 	clients[clientid] = client
 	return client
+}
+
+func getClient(clientid ClientId) *Client {
+	clientsLock.RLock()
+	defer clientsLock.RUnlock()
+	return clients[clientid]
 }
 
 func (self *Client) Close() {
@@ -54,4 +61,32 @@ func (self *Client) DelEntity(eid Eid) {
 
 func (self *Client) setOwner(owner Eid) {
 	self.owner = owner
+}
+
+func newBootEntity() *Entity {
+	config := conf.GetEntitiesConfig()
+	return NewEntity(config.BootEntity)
+}
+
+func OnNewClient(clientid ClientId, rpcer ClientRPCer) error {
+	boot := newBootEntity()
+
+	client := newClient(clientid, rpcer)
+	boot.SetClient(client)
+	return nil
+}
+
+func OnDelClient(clientid ClientId) error {
+	client := getClient(clientid)
+	if client == nil {
+		log.Printf("OnDelClient: client %s not found", clientid)
+		return nil
+	}
+	if client.owner != "" {
+		if entity := getEntity(client.owner); entity != nil {
+			entity.SetClient(nil)
+		}
+	}
+
+	return nil
 }

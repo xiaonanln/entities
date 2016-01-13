@@ -115,11 +115,9 @@ func handleNewClient(gated *EntitiesdClientProxy) error {
 	}
 
 	log.Printf("%s: new client %s", gated, clientid)
-	boot := newBootEntity()
-
 	clientRpcer := NewClientRPCProxy(gated.Gid, clientid)
-	client := entities.NewClient(clientid, clientRpcer)
-	boot.SetClient(client)
+	entities.OnNewClient(clientid, clientRpcer)
+
 	return nil
 }
 
@@ -129,7 +127,7 @@ func handleDelClient(gated *EntitiesdClientProxy) error {
 		return err
 	}
 	log.Printf("%s: lose client %s", gated, clientid)
-	entities.DelClient(clientid)
+	entities.OnDelClient(clientid)
 	return nil
 }
 
@@ -151,9 +149,4 @@ func handleRPC(gated *EntitiesdClientProxy) error {
 	entities.OnCall(clientid, eid, method, args)
 
 	return nil
-}
-
-func newBootEntity() *entities.Entity {
-	config := conf.GetEntitiesConfig()
-	return NewEntity(config.BootEntity)
 }
