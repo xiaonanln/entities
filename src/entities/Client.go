@@ -21,6 +21,7 @@ type ClientRPCer interface {
 type Client struct {
 	clientid ClientId
 	rpcer    ClientRPCer
+	owner    Eid
 }
 
 func NewClient(clientid ClientId, rpcer ClientRPCer) *Client {
@@ -49,4 +50,8 @@ func (self *Client) NewEntity(entity *Entity) {
 
 func (self *Client) DelEntity(eid Eid) {
 	self.rpcer.DelEntity(eid)
+}
+
+func (self *Client) setOwner(owner Eid) {
+	self.owner = owner
 }

@@ -92,6 +92,8 @@ func serveClientConnectionLoop(client *EntitiesdClientProxy) {
 		switch cmd {
 		case CMD_NEW_CLIENT:
 			err = handleNewClient(client)
+		case CMD_DEL_CLIENT:
+			err = handleDelClient(client)
 		case CMD_RPC:
 			err = handleRPC(client)
 		default:
@@ -112,13 +114,22 @@ func handleNewClient(gated *EntitiesdClientProxy) error {
 		return err
 	}
 
-	log.Printf("%s: clientid %s", gated, clientid)
+	log.Printf("%s: new client %s", gated, clientid)
 	boot := newBootEntity()
 
 	clientRpcer := NewClientRPCProxy(gated.Gid, clientid)
 	client := entities.NewClient(clientid, clientRpcer)
 	boot.SetClient(client)
+	return nil
+}
 
+func handleDelClient(gated *EntitiesdClientProxy) error {
+	var clientid ClientId
+	if err := gated.RecvCid(&clientid); err != nil {
+		return err
+	}
+	log.Printf("%s: lose client %s", gated, clientid)
+	entities.DelClient(clientid)
 	return nil
 }
 

@@ -69,8 +69,9 @@ func (self *Entity) SetClient(client *Client) {
 	}
 
 	self.Client = client
-	if self.Client != nil {
-		self.Client.NewEntity(self)
+	if client != nil {
+		client.owner = self.id
+		client.NewEntity(self)
 	}
 }
 

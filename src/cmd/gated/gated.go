@@ -77,7 +77,7 @@ func serveClientConnection(conn net.Conn) {
 	dispatchAddNewClient(gatedClient)
 	defer dispatchOnClientClose(gatedClient)
 
-	err := onClientConnect(gatedClient)
+	err := letClientConnectEntitiesd(gatedClient)
 	if err != nil {
 		HandleConnectionError(gatedClient, err)
 		return
@@ -104,7 +104,7 @@ func serveClientConnectionLoop(gatedClient *gated.GatedClientProxy) {
 				HandleConnectionError(gatedClient, err)
 				break
 			}
-			err = onClientCallRPC(gatedClient, eid, method, args)
+			err = letClientRPCtoEntitiesd(gatedClient, eid, method, args)
 			if err != nil {
 				HandleConnectionError(gatedClient, err)
 				break

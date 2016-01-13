@@ -68,7 +68,7 @@ func chooseRandomEntitiesd() (int, *entitiesd.EntitiesdClient) {
 	return i + 1, entitiesdClients[i]
 }
 
-func onClientConnect(client *gated.GatedClientProxy) error {
+func letClientConnectEntitiesd(client *gated.GatedClientProxy) error {
 	// client connected, choose random entitiesd and tell it
 	pid, entitiesd := chooseRandomEntitiesd()
 	if entitiesd == nil {
@@ -85,7 +85,7 @@ func onClientConnect(client *gated.GatedClientProxy) error {
 	return err
 }
 
-func onClientCallRPC(client *gated.GatedClientProxy, eid Eid, method string, args []interface{}) error {
+func letClientRPCtoEntitiesd(client *gated.GatedClientProxy, eid Eid, method string, args []interface{}) error {
 	log.Printf("RPC from client %s: %s.%s%v", client, eid, method, args)
 	entitiesd := entitiesdClients[client.Pid-1]
 	if entitiesd == nil {
@@ -98,6 +98,22 @@ func onClientCallRPC(client *gated.GatedClientProxy, eid Eid, method string, arg
 		entitiesdClientOnError(client.Pid, entitiesd, err)
 	}
 	return err
+}
+
+func letClientDisconnectEntitiesd(client *gated.GatedClientProxy) error {
+	if client.Pid <= 0 {
+		return nil
+	}
+	entitiesd := entitiesdClients[client.Pid-1]
+	if entitiesd == nil {
+		return nil
+	}
+	if entitiesd != nil {
+		if err := entitiesd.DelClient(client.ClientId); err != nil {
+			entitiesdClientOnError(client.Pid, entitiesd, err)
+		}
+	}
+	return nil
 }
 
 func entitiesdClientOnError(pid int, entitiesd *entitiesd.EntitiesdClient, err error) {

@@ -6,4 +6,5 @@ const (
 	CMD_NEW_ENTITY = iota // Create entity on client
 	CMD_DEL_ENTITY = iota // Destroy entity
 	CMD_NEW_CLIENT = iota // New client from gate
+	CMD_DEL_CLIENT = iota // Del client from gate
 )

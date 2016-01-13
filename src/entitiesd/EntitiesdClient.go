@@ -1,7 +1,7 @@
 package entitiesd
 
 import (
-	"common"
+	. "common"
 	"net"
 )
 
@@ -18,7 +18,12 @@ func NewEntitiesdClient(conn net.Conn, pid int) *EntitiesdClient {
 	}
 }
 
-func (self *EntitiesdClient) NewClient(cid common.ClientId) error {
+func (self *EntitiesdClient) NewClient(cid ClientId) error {
 	self.SendCmd(CMD_NEW_CLIENT)
+	return self.SendCid(cid)
+}
+
+func (self *EntitiesdClient) DelClient(cid ClientId) error {
+	self.SendCmd(CMD_DEL_CLIENT)
 	return self.SendCid(cid)
 }
