@@ -26,6 +26,8 @@ func processNextCommand(client *MapdClientProxy) {
 	// 	processSyncTime(client)
 	case CMD_LOCK_EID:
 		processLockEid(client)
+	case CMD_REGISTER_GLOBAL:
+		processRegisterGlobal(client)
 	}
 }
 
@@ -73,6 +75,21 @@ func processLockEid(client *MapdClientProxy) {
 	}
 	// TODO: lock Eid, cache post-coming calls for a period of time
 	// send lock ok when ready
+}
+
+func processRegisterGlobal(client *MapdClientProxy) {
+	var eid Eid
+	var entityType string
+	client.RecvEid(&eid)
+	if err := client.RecvString(&entityType); err != nil {
+		panic(err)
+	}
+
+	if registerGlobalEntity(eid, entityType) {
+		client.SendReplyOk()
+	} else {
+		client.SendByte(REPLY_REGISTER_FAIL)
+	}
 }
 
 func processRPC(client *MapdClientProxy) {
