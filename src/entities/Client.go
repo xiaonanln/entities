@@ -63,13 +63,17 @@ func (self *Client) setOwner(owner Eid) {
 	self.owner = owner
 }
 
-func newBootEntity() *Entity {
+func newBootEntity() (*Entity, error) {
 	config := conf.GetEntitiesConfig()
 	return NewEntity(config.BootEntity)
 }
 
 func OnNewClient(clientid ClientId, rpcer ClientRPCer) error {
-	boot := newBootEntity()
+	boot, err := newBootEntity()
+	if err != nil {
+		// new boot entity failed...
+		return err
+	}
 
 	client := newClient(clientid, rpcer)
 	boot.SetClient(client)

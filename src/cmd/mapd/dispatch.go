@@ -34,7 +34,7 @@ func DispatchRPC(eid common.Eid, method string, args []interface{}, fromPid int)
 		return
 	}
 
-	err := client.OnRPC(eid, method, args)
+	err := client.SendRPC(eid, method, args)
 	if err != nil {
 		handleClientError(client, err)
 	}

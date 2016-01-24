@@ -1,4 +1,4 @@
-package sample_entities
+package sample_chatroom
 
 import (
 	"entities"
@@ -10,7 +10,12 @@ type Account struct {
 }
 
 func (self *Account) Login(user, pass string) {
-	avatar := entities.NewEntity("Avatar")
+	avatar, err := entities.NewEntity("Avatar")
+	if err != nil {
+		log.Printf("Create avatar failed: %s", err)
+		return
+	}
+
 	log.Printf("Logining %s %s, avatar created: %v", user, pass, avatar)
 	self.GiveClientTo(avatar)
 }

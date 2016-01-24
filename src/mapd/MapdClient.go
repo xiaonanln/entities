@@ -37,6 +37,21 @@ func (self *MapdClient) SetMapping(eid Eid) error {
 	return self.RecvReplyOk()
 }
 
+func (self *MapdClient) RegisterGlobal(eid Eid, entityType string) (bool, error) {
+	var err error
+	self.SendCmd(CMD_REGISTER_GLOBAL)
+	self.SendEid(eid)
+	err = self.SendString(entityType)
+	if err != nil {
+		return false, err
+	}
+	ret, err := self.RecvByte()
+	if err != nil {
+		return false, err
+	}
+	return ret == REPLY_OK, nil
+}
+
 func (self *MapdClient) RPC(eid Eid, method string, args []interface{}) error {
 	self.SendCmd(CMD_RPC)
 	err := self.SendRPC(eid, method, args)

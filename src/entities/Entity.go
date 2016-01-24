@@ -2,6 +2,8 @@ package entities
 
 import (
 	. "common"
+
+	"entities/mapd_cmd"
 	"fmt"
 	"log"
 	"reflect"
@@ -9,18 +11,20 @@ import (
 )
 
 type callQueueItem struct {
-	src    Eid // source entity
 	method string
 	args   []interface{}
 }
 
 func (self callQueueItem) String() string {
-	return fmt.Sprintf(`CALL<%s(%v) FROM %s>`, self.method, self.args, self.src)
+	return fmt.Sprintf(`CALL<%s(%v)>`, self.method, self.args)
 }
 
 type EntityType interface {
 	Id() Eid
-	Call(id Eid, method string, args ...interface{})
+	EntityType() string
+	Call(id Eid, method string, args ...interface{}) error
+	SetClient(client *Client)
+	GiveClientTo(other *Entity)
 }
 
 type Entity struct {
@@ -49,18 +53,21 @@ func (self *Entity) String() string {
 }
 
 // call another entity
-func (self *Entity) Call(id Eid, method string, args ...interface{}) {
-	entity := getEntity(id)
-	if entity != nil {
-		entity.pushCall(self.id, method, args)
-		return
-	}
+func (self *Entity) Call(id Eid, method string, args ...interface{}) error {
+	// entity := getEntity(id)
+	// if entity != nil {
+	// 	entity.pushCall(method, args)
+	// 	return nil
+	// }
+
 	// call the coordinator now...
-	log.Printf("entity %s not found, using coordinator...", id)
+	log.Printf("entity %s not found, using mapd...", id)
+	err := mapd_cmd.RPC(id, method, args)
+	return err
 }
 
-func (self *Entity) pushCall(srcId Eid, method string, args []interface{}) {
-	self.callQueue <- &callQueueItem{src: srcId, method: method, args: args} // push call to call queue
+func (self *Entity) pushCall(method string, args []interface{}) {
+	self.callQueue <- &callQueueItem{method: method, args: args} // push call to call queue
 }
 
 func (self *Entity) SetClient(client *Client) {
@@ -108,10 +115,17 @@ func (self *Entity) onLoseClient(oldClient *Client) {
 	log.Printf("Entity %s lose client %s", self, oldClient)
 }
 
+func (self *Entity) Destroy() {
+	if self.Client != nil {
+		self.SetClient(nil)
+	}
+	delEntity(self.id)
+}
+
 func (self *Entity) routine() {
 	for {
 		call := <-self.callQueue
-		log.Printf("%s >>> %s.%s%v", call.src, self.id, call.method, call.args)
+		log.Printf(">>> %s.%s%v", self.id, call.method, call.args)
 		self.handleCall(call)
 	}
 }

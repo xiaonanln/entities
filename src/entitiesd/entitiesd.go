@@ -4,6 +4,8 @@ import (
 	. "common"
 	"conf"
 	"entities"
+	"entities/mapd_cmd"
+	"entities/mapd_rpc"
 	"flag"
 	"fmt"
 	"log"
@@ -11,21 +13,24 @@ import (
 )
 
 var (
-	pid int
+	pid             int
+	NewEntity       = entities.NewEntity
+	NewGlobalEntity = entities.NewGlobalEntity
 )
 
 func RegisterEntity(entity entities.EntityType) {
 	entities.RegisterEntity(entity)
 }
 
-func NewEntity(entityType string) *entities.Entity {
-	return entities.NewEntity(entityType)
-}
-
-func Run() {
+func Prepare() {
 	log.Println("Starting entitiesd service ...")
 	parseArguments()
 	log.SetPrefix(fmt.Sprintf("entitiesd-%d ", pid))
+	mapd_cmd.Init(pid)
+	mapd_rpc.Init(pid)
+}
+
+func Run() {
 	runEntitiesdService()
 }
 
@@ -146,7 +151,7 @@ func handleRPC(gated *EntitiesdClientProxy) error {
 
 	// received rpc from gate
 	log.Printf("Client %s >>> %s.%s%v", clientid, eid, method, args)
-	entities.OnCall(clientid, eid, method, args)
+	entities.OnCall(eid, method, args)
 
 	return nil
 }

@@ -1,7 +1,6 @@
 package mapd
 
 import (
-	"common"
 	"fmt"
 	"net"
 	"rpc"
@@ -26,8 +25,4 @@ func (self *MapdClientProxy) SetPid(pid int) {
 		panic(fmt.Errorf("SetPid is called twice"))
 	}
 	self.Pid = pid
-}
-
-func (self *MapdClientProxy) OnRPC(eid common.Eid, method string, args []interface{}) error {
-	return self.SendRPC(eid, method, args)
 }

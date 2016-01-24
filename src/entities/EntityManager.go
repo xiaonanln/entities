@@ -2,6 +2,7 @@ package entities
 
 import (
 	. "common"
+	"entities/mapd_cmd"
 	"fmt"
 	"log"
 	"reflect"
@@ -18,7 +19,7 @@ var (
 	registeredEntityTypes = make(map[string]reflect.Type)
 )
 
-func NewEntity(entityTypeName string) *Entity {
+func newEntity(entityTypeName string) *Entity {
 	entityType, ok := registeredEntityTypes[entityTypeName]
 	if !ok {
 		panic(fmt.Errorf("unknown entity type: %s", entityTypeName))
@@ -36,6 +37,43 @@ func NewEntity(entityTypeName string) *Entity {
 	return entity
 }
 
+func NewEntity(entityType string) (*Entity, error) {
+	entity := newEntity(entityType)
+	if entity == nil {
+		return nil, fmt.Errorf("NewEntity failed, type: %s", entityType)
+	}
+
+	err := mapd_cmd.DeclareNewEntity(entity.id)
+	if err != nil {
+		// declare new entity failed, we have to
+		log.Printf("Declare new entity %s failed: %s", entity, err)
+		entity.Destroy()
+		return nil, err
+	}
+
+	return entity, nil
+}
+
+func NewGlobalEntity(entityType string) (*Entity, error) {
+	entity, err := NewEntity(entityType)
+	if err != nil {
+		return entity, err
+	}
+
+	ok, err := mapd_cmd.RegisterGlobalEntity(entity.id, entityType)
+	if err != nil {
+		entity.Destroy()
+		return nil, err
+	}
+
+	if ok {
+		return entity, nil // register global succeed
+	} else {
+		entity.Destroy() // register global failed, has to destroy entity
+		return nil, nil  // no error and no entity
+	}
+}
+
 func getEntity(id Eid) *Entity {
 	entitiesLock.RLock()
 	defer entitiesLock.RUnlock()
@@ -50,6 +88,12 @@ func putEntity(entity *Entity) {
 	}
 
 	entities[entity.id] = entity
+}
+
+func delEntity(eid Eid) {
+	entitiesLock.Lock()
+	defer entitiesLock.Unlock()
+	delete(entities, eid)
 }
 
 func RegisterEntity(entity EntityType) {
@@ -71,14 +115,14 @@ func RegisterEntity(entity EntityType) {
 	// fmt.Println(entityValue, entityField, entityField.IsValid())
 }
 
-func OnCall(clientid ClientId, eid Eid, method string, args []interface{}) {
+func OnCall(eid Eid, method string, args []interface{}) {
 	entity := getEntity(eid)
 	if entity == nil {
 		log.Printf("entity %s not found when calling %s%v", eid, method, args)
 		return
 	}
 
-	entity.pushCall(eid, method, args) // calling from client is calling from self
+	entity.pushCall(method, args) // calling from client is calling from self
 }
 
 // func setLocalEntity(ent *Entity) {
