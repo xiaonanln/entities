@@ -87,6 +87,7 @@ func processRegisterGlobal(client *MapdClientProxy) {
 
 	if registerGlobalEntity(eid, entityType) {
 		client.SendReplyOk()
+		DispatchGlobalEntityRegister(eid, entityType)
 	} else {
 		client.SendByte(REPLY_REGISTER_FAIL)
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	. "common"
+	"mapd"
 	"sync"
 )
 
@@ -26,4 +27,13 @@ func getRegisteredGlobalEntity(entityType string) Eid {
 	registerGlobalLock.RLock()
 	defer registerGlobalLock.RUnlock()
 	return registeredGlobalEntities[entityType]
+}
+
+func NotifyAllRegisteredGlobalEntities(client *mapd.MapdClientProxy) {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	for entityType, eid := range registeredGlobalEntities {
+		client.NotifyRegisterGlobal(eid, entityType)
+	}
 }

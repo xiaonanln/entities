@@ -1,26 +1,27 @@
 package main
 
 import (
-	"common"
+	. "common"
 	"log"
 	"mapd"
 	"sync"
 )
 
 var (
-	mapping    = make(map[common.Eid]int)
-	lock       sync.RWMutex // only do locking in Caped functions
-	rpcClients = make(map[int]*mapd.MapdClientProxy)
+	mapping    = make(map[Eid]int)
+	lock       sync.RWMutex                          // only do locking in Caped functions
+	rpcClients = make(map[int]*mapd.MapdClientProxy) // TODO: use array instead
 )
 
 func AddRPCClient(client *mapd.MapdClientProxy, pid int) {
 	lock.Lock()
-	defer lock.Unlock()
-
 	rpcClients[pid] = client
+	lock.Unlock()
+
+	NotifyAllRegisteredGlobalEntities(client)
 }
 
-func DispatchRPC(eid common.Eid, method string, args []interface{}, fromPid int) {
+func DispatchRPC(eid Eid, method string, args []interface{}, fromPid int) {
 	log.Printf("DISPATCH >>> %s.%s%v", eid, method, args)
 	lock.RLock()
 	defer lock.RUnlock()
@@ -34,19 +35,32 @@ func DispatchRPC(eid common.Eid, method string, args []interface{}, fromPid int)
 		return
 	}
 
-	err := client.SendRPC(eid, method, args)
+	err := client.RPC(eid, method, args)
 	if err != nil {
-		handleClientError(client, err)
+		handleClientError(client, err) // TODO: use HandleConnectionError instead
 	}
 }
 
-func GetMapping(eid common.Eid, fromPid int) int {
+func DispatchGlobalEntityRegister(eid Eid, entityType string) {
+	log.Printf("DISPATCH >>> global entity %s ==> %s", entityType, eid)
+	lock.RLock()
+	defer lock.RUnlock()
+
+	for _, client := range rpcClients {
+		err := client.NotifyRegisterGlobal(eid, entityType)
+		if err != nil {
+			handleClientError(client, err)
+		}
+	}
+}
+
+func GetMapping(eid Eid, fromPid int) int {
 	lock.RLock()
 	defer lock.RUnlock()
 	return getMapping(eid, fromPid)
 }
 
-func getMapping(eid common.Eid, fromPid int) int {
+func getMapping(eid Eid, fromPid int) int {
 	pid, ok := mapping[eid]
 	if ok {
 		return pid
@@ -56,7 +70,7 @@ func getMapping(eid common.Eid, fromPid int) int {
 	}
 }
 
-func SetMapping(eid common.Eid, pid int) {
+func SetMapping(eid Eid, pid int) {
 	lock.Lock()
 	defer lock.Unlock()
 

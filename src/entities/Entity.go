@@ -27,16 +27,25 @@ type EntityType interface {
 	GiveClientTo(other *Entity)
 }
 
-type Entity struct {
-	id         Eid
-	callQueue  chan *callQueueItem
-	realEntity reflect.Value
-	Client     *Client
+type ClientEventHandler interface {
+	OnLoseClient(oldClient *Client)
+	OnGetClient()
 }
 
-func (self *Entity) init(id Eid, realEntity reflect.Value) {
+type Entity struct {
+	id                 Eid
+	callQueue          chan *callQueueItem
+	realEntity         EntityType
+	realEntityValue    reflect.Value
+	clientEventHandler ClientEventHandler
+	Client             *Client
+}
+
+func (self *Entity) init(id Eid, realEntityValue reflect.Value) {
 	self.id = id
-	self.realEntity = realEntity
+	self.realEntityValue = realEntityValue
+	self.realEntity = realEntityValue.Interface().(EntityType)
+	self.clientEventHandler, _ = self.realEntity.(ClientEventHandler)
 	self.callQueue = make(chan *callQueueItem, ENTITY_CALL_QUEUE_BUFF_LEN)
 }
 
@@ -45,7 +54,7 @@ func (self *Entity) Id() Eid {
 }
 
 func (self *Entity) EntityType() string {
-	return reflect.Indirect(self.realEntity).Type().Name()
+	return reflect.Indirect(self.realEntityValue).Type().Name()
 }
 
 func (self *Entity) String() string {
@@ -109,10 +118,16 @@ func (self *Entity) GiveClientTo(other *Entity) {
 
 func (self *Entity) onGetClient() {
 	log.Printf("Entity %s get client %s", self, self.Client)
+	if self.clientEventHandler != nil {
+		self.clientEventHandler.OnGetClient()
+	}
 }
 
 func (self *Entity) onLoseClient(oldClient *Client) {
 	log.Printf("Entity %s lose client %s", self, oldClient)
+	if self.clientEventHandler != nil {
+		self.clientEventHandler.OnLoseClient(oldClient)
+	}
 }
 
 func (self *Entity) Destroy() {
@@ -138,7 +153,7 @@ func (self *Entity) handleCall(call *callQueueItem) {
 			debug.PrintStack()
 		}
 	}()
-	method := self.realEntity.MethodByName(call.method)
+	method := self.realEntityValue.MethodByName(call.method)
 	in := make([]reflect.Value, len(call.args))
 
 	for i, arg := range call.args {

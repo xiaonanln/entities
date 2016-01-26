@@ -21,20 +21,20 @@ func NewMapdConnection(conn net.Conn) MapdConnection {
 	return mapdCon
 }
 
-func (self MapdConnection) RecvCmd() (byte, error) {
+func (self *MapdConnection) RecvCmd() (byte, error) {
 	b, err := self.RecvByte()
 	return b, err
 }
 
-func (self MapdConnection) SendCmd(cmd byte) error {
+func (self *MapdConnection) SendCmd(cmd byte) error {
 	return self.SendByte(cmd)
 }
 
-func (self MapdConnection) SendReplyOk() error {
+func (self *MapdConnection) SendReplyOk() error {
 	return self.SendByte(REPLY_OK)
 }
 
-func (self MapdConnection) RecvReplyOk() error {
+func (self *MapdConnection) RecvReplyOk() error {
 	b, err := self.RecvByte()
 	if err != nil {
 		return err
@@ -45,19 +45,19 @@ func (self MapdConnection) RecvReplyOk() error {
 	return nil
 }
 
-func (self MapdConnection) SendRPC(eid Eid, method string, args []interface{}) error {
+func (self *MapdConnection) SendRPC(eid Eid, method string, args []interface{}) error {
 	return self.rpcEncoder.Encode(string(eid), method, args)
 }
 
-func (self MapdConnection) RecvRPC(eid *Eid, method *string, args *[]interface{}) error {
+func (self *MapdConnection) RecvRPC(eid *Eid, method *string, args *[]interface{}) error {
 	return self.rpcDecoder.Decode((*string)(eid), method, args)
 }
 
-func (self MapdConnection) SendPid(pid int) error {
+func (self *MapdConnection) SendPid(pid int) error {
 	return self.SendUint16(uint16(pid))
 }
 
-func (self MapdConnection) RecvPid() (int, error) {
+func (self *MapdConnection) RecvPid() (int, error) {
 	v, err := self.RecvUint16()
 	return int(v), err
 }

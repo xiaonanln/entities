@@ -1,7 +1,9 @@
 package mapd
 
 import (
+	. "common"
 	"fmt"
+	"log"
 	"net"
 	"rpc"
 )
@@ -25,4 +27,16 @@ func (self *MapdClientProxy) SetPid(pid int) {
 		panic(fmt.Errorf("SetPid is called twice"))
 	}
 	self.Pid = pid
+}
+
+func (self *MapdClientProxy) NotifyRegisterGlobal(eid Eid, entityType string) error {
+	log.Printf(">>> %s: global %s registered to be %s", self, entityType, eid)
+	self.SendCmd(CMD_REGISTER_GLOBAL)
+	self.SendEid(eid)
+	return self.SendString(entityType)
+}
+
+func (self *MapdClientProxy) RPC(eid Eid, method string, args []interface{}) error {
+	self.SendCmd(CMD_RPC)
+	return self.SendRPC(eid, method, args)
 }

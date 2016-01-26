@@ -36,16 +36,34 @@ func maintainMapdRpcClient() {
 			}
 		}
 
-		var eid Eid
-		var method string
-		var args []interface{}
-		err = mapdRpcClient.RecvRPC(&eid, &method, &args)
-		if err != nil {
-			onMapdRpcClientError(err)
-			continue
-		}
+		cmd, err := mapdRpcClient.RecvCmd()
+		log.Printf("From mapd <<< cmd %v error %s", cmd, err)
+		switch cmd {
+		case mapd.CMD_RPC:
 
-		entities.OnCall(eid, method, args)
+			var eid Eid
+			var method string
+			var args []interface{}
+			err = mapdRpcClient.RecvRPC(&eid, &method, &args)
+			if err != nil {
+				onMapdRpcClientError(err)
+				continue
+			}
+
+			entities.OnCall(eid, method, args)
+
+		case mapd.CMD_REGISTER_GLOBAL:
+			var eid Eid
+			var entityType string
+			mapdRpcClient.RecvEid(&eid)
+			err := mapdRpcClient.RecvString(&entityType)
+			if err != nil {
+				onMapdRpcClientError(err)
+				continue
+			}
+
+			log.Printf("Global entity %s registered to be %s", entityType, eid)
+		}
 	}
 }
 
