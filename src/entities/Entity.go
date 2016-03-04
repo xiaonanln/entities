@@ -4,6 +4,7 @@ import (
 	. "common"
 
 	"entities/mapd_cmd"
+	"entities/mapd_rpc"
 	"fmt"
 	"log"
 	"reflect"
@@ -77,6 +78,15 @@ func (self *Entity) Call(id Eid, method string, args ...interface{}) error {
 
 func (self *Entity) pushCall(method string, args []interface{}) {
 	self.callQueue <- &callQueueItem{method: method, args: args} // push call to call queue
+}
+
+func (self *Entity) CallGlobalEntity(entityType string, method string, args ...interface{}) error {
+	eid := mapd_rpc.GetRegisteredGlobalEntity(entityType)
+	if eid == "" {
+		log.Panicf("Global entity %s not found while calling method %s", entityType, method)
+	}
+
+	return self.Call(eid, method, args...)
 }
 
 func (self *Entity) SetClient(client *Client) {

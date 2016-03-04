@@ -3,7 +3,6 @@ package mapd_rpc
 import (
 	. "common"
 	"conf"
-	"entities"
 	"log"
 	"mapd"
 	"setup"
@@ -11,17 +10,24 @@ import (
 )
 
 var (
-	pid           int
-	mapdRpcClient *mapd.MapdClient
+	onCall               func(eid Eid, method string, args []interface{})
+	pid                  int
+	mapdRpcClient        *mapd.MapdClient
+	globalEntityRegister = make(map[string]Eid)
 )
 
-func Init(_pid int) {
+func Init(_pid int, _onCall func(eid Eid, method string, args []interface{})) {
 	if !setup.IsEntitiesd() {
 		log.Fatalf("mapd_cmd.Init should only be called by entitiesd")
 	}
 
 	pid = _pid
+	onCall = _onCall
 	go maintainMapdRpcClient()
+}
+
+func GetRegisteredGlobalEntity(entityType string) Eid {
+	return globalEntityRegister[entityType]
 }
 
 func maintainMapdRpcClient() {
@@ -50,7 +56,7 @@ func maintainMapdRpcClient() {
 				continue
 			}
 
-			entities.OnCall(eid, method, args)
+			onCall(eid, method, args)
 
 		case mapd.CMD_REGISTER_GLOBAL:
 			var eid Eid
@@ -62,6 +68,13 @@ func maintainMapdRpcClient() {
 				continue
 			}
 
+			oldEid, ok := globalEntityRegister[entityType]
+			if ok {
+				// global entity type already registered
+				log.Printf("ERROR: Global entity type %s is already registered to entity %s !!!!!!", entityType, oldEid)
+			}
+
+			globalEntityRegister[entityType] = eid
 			log.Printf("Global entity %s registered to be %s", entityType, eid)
 		}
 	}

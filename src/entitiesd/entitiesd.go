@@ -27,7 +27,7 @@ func Prepare() {
 	parseArguments()
 	log.SetPrefix(fmt.Sprintf("entitiesd-%d ", pid))
 	mapd_cmd.Init(pid)
-	mapd_rpc.Init(pid)
+	mapd_rpc.Init(pid, entities.OnCall)
 }
 
 func Run() {
