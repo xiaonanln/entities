@@ -4,7 +4,6 @@ import (
 	. "common"
 
 	"entities/mapd_cmd"
-	"entities/mapd_rpc"
 	"fmt"
 	"log"
 	"reflect"
@@ -62,6 +61,10 @@ func (self *Entity) String() string {
 	return fmt.Sprintf(`%s<%s>`, self.EntityType(), self.Id())
 }
 
+func (self *Entity) OnInit() {
+	log.Printf("WARNING: %s.OnInit is not defined", self)
+}
+
 // call another entity
 func (self *Entity) Call(id Eid, method string, args ...interface{}) error {
 	// entity := getEntity(id)
@@ -81,9 +84,11 @@ func (self *Entity) pushCall(method string, args []interface{}) {
 }
 
 func (self *Entity) CallGlobalEntity(entityType string, method string, args ...interface{}) error {
-	eid := mapd_rpc.GetRegisteredGlobalEntity(entityType)
-	if eid == "" {
-		log.Panicf("Global entity %s not found while calling method %s", entityType, method)
+	eid, ok := globalRegisterMap[entityType]
+
+	if !ok {
+		log.Printf("ERROR: Global entity %s not found while calling method %s", entityType, method)
+		return fmt.Errorf("global entity %s not found", entityType)
 	}
 
 	return self.Call(eid, method, args...)
@@ -144,7 +149,12 @@ func (self *Entity) Destroy() {
 	if self.Client != nil {
 		self.SetClient(nil)
 	}
+	close(self.callQueue)
 	delEntity(self.id)
+}
+
+func (self *Entity) NewEntity(entityType string) (*Entity, error) {
+	return NewEntity(entityType)
 }
 
 func (self *Entity) routine() {
@@ -164,10 +174,16 @@ func (self *Entity) handleCall(call *callQueueItem) {
 		}
 	}()
 	method := self.realEntityValue.MethodByName(call.method)
+	methodType := method.Type()
+
 	in := make([]reflect.Value, len(call.args))
 
 	for i, arg := range call.args {
-		in[i] = reflect.ValueOf(arg)
+		argType := methodType.In(i)
+		argVal := reflect.ValueOf(arg)
+		in[i] = argVal.Convert(argType)
+		// log.Printf("Arg %d is %T %v value %v => %v", i, arg, arg, argVal, in[i])
 	}
+	// log.Printf("arguments: %v", in)
 	method.Call(in)
 }

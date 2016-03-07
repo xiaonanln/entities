@@ -3,8 +3,8 @@ package common
 import (
 	"crypto/md5"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -13,14 +13,14 @@ import (
 )
 
 const (
-	EID_LENGTH = 12
+	EID_LENGTH = 16
 )
 
 type Eid string
 
 // NewObjectId returns a new unique ObjectId.
 func NewEid() Eid {
-	var b [12]byte
+	var b = make([]byte, 12)
 	// Timestamp, 4 bytes, big endian
 	binary.BigEndian.PutUint32(b[:], uint32(time.Now().Unix()))
 	// Machine, first 3 bytes of md5(hostname)
@@ -36,7 +36,8 @@ func NewEid() Eid {
 	b[9] = byte(i >> 16)
 	b[10] = byte(i >> 8)
 	b[11] = byte(i)
-	return Eid(b[:])
+
+	return Eid(base64.StdEncoding.EncodeToString(b))
 }
 
 // objectIdCounter is atomically incremented when generating a new ObjectId
@@ -67,10 +68,6 @@ func readMachineId() []byte {
 	return id
 }
 
-func (self Eid) Hex() string {
-	return hex.EncodeToString([]byte(self))
-}
-
 func (self Eid) String() string {
-	return self.Hex()
+	return string(self)
 }

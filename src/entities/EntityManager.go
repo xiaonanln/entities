@@ -17,6 +17,7 @@ var (
 	entitiesLock          sync.RWMutex
 	entities              = make(map[Eid]*Entity)
 	registeredEntityTypes = make(map[string]reflect.Type)
+	globalRegisterMap     = make(map[string]Eid)
 )
 
 func newEntity(entityTypeName string) *Entity {
@@ -43,6 +44,8 @@ func NewEntity(entityType string) (*Entity, error) {
 		return nil, fmt.Errorf("NewEntity failed, type: %s", entityType)
 	}
 
+	entity.pushCall("OnInit", []interface{}{})
+
 	err := mapd_cmd.DeclareNewEntity(entity.id)
 	if err != nil {
 		// declare new entity failed, we have to
@@ -67,6 +70,8 @@ func NewGlobalEntity(entityType string) (*Entity, error) {
 	}
 
 	if ok {
+		OnGlobalRegister(entityType, entity.id)
+		entity.pushCall("OnRegisteredGlobally", []interface{}{})
 		return entity, nil // register global succeed
 	} else {
 		entity.Destroy() // register global failed, has to destroy entity
@@ -123,6 +128,19 @@ func OnCall(eid Eid, method string, args []interface{}) {
 	}
 
 	entity.pushCall(method, args) // calling from client is calling from self
+}
+
+func OnGlobalRegister(entityType string, eid Eid) {
+	globalRegisterMap[entityType] = eid
+}
+
+func getLocalGlobalEntity(entityType string) *Entity {
+	eid, ok := globalRegisterMap[entityType]
+	if !ok {
+		log.Printf("WARNING: global entity %s is not registered", entityType)
+		return nil
+	}
+	return getEntity(eid)
 }
 
 // func setLocalEntity(ent *Entity) {

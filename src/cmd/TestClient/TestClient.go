@@ -124,15 +124,27 @@ func handleRPC(client *gated.GatedClient) error {
 }
 
 func sendRoutine(client *gated.GatedClient) {
+	const (
+		QUERY_ROOMS = iota
+	)
+
+	nextAction := QUERY_ROOMS
+
 	for {
 		time.Sleep(time.Second * 3)
+
 		if avatarId == "" && accountId != "" {
 			client.Call(accountId, "Login", "test", "test")
 			continue
 		}
 
-		if avatarId != "" {
-			client.Call(avatarId, "Test", 1, 2, "s")
+		if avatarId == "" {
+			log.Println("Waiting for login to complete ...")
+			continue
+		}
+
+		if nextAction == QUERY_ROOMS {
+			client.Call(avatarId, "QueryChatRoomList")
 			continue
 		}
 

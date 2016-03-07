@@ -11,18 +11,22 @@ import (
 
 var (
 	onCall               func(eid Eid, method string, args []interface{})
+	onGlobalRegister     func(entityType string, eid Eid)
 	pid                  int
 	mapdRpcClient        *mapd.MapdClient
 	globalEntityRegister = make(map[string]Eid)
 )
 
-func Init(_pid int, _onCall func(eid Eid, method string, args []interface{})) {
+func Init(_pid int,
+	_onCall func(eid Eid, method string, args []interface{}),
+	_onGlobalRegister func(entityType string, eid Eid)) {
 	if !setup.IsEntitiesd() {
 		log.Fatalf("mapd_cmd.Init should only be called by entitiesd")
 	}
 
 	pid = _pid
 	onCall = _onCall
+	onGlobalRegister = _onGlobalRegister
 	go maintainMapdRpcClient()
 }
 
@@ -76,6 +80,7 @@ func maintainMapdRpcClient() {
 
 			globalEntityRegister[entityType] = eid
 			log.Printf("Global entity %s registered to be %s", entityType, eid)
+			onGlobalRegister(entityType, eid)
 		}
 	}
 }
