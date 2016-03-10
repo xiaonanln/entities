@@ -32,13 +32,14 @@ func (self *ChatRoomStub) OnRegisteredGlobally() {
 	log.Printf("Register global entity: %s", self)
 }
 
-func (self *ChatRoomStub) QueryChatRoomList(caller Eid) {
+func (self *ChatRoomStub) QueryChatRoomList(caller string) {
 	roomIds := []int{}
 	for roomId := range self.chatrooms {
 		roomIds = append(roomIds, roomId)
 	}
 	log.Printf("QueryChatRoomList: caller = %s", caller)
-	self.Call(caller, "OnQueryChatRoomList", roomIds)
+	callerEid := Eid(caller)
+	self.Call(callerEid, "OnQueryChatRoomList", roomIds)
 }
 
 func (self *ChatRoomStub) newChatRoom() Eid {

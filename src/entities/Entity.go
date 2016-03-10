@@ -10,6 +10,11 @@ import (
 	"runtime/debug"
 )
 
+var (
+	interfaceSliceType     = reflect.TypeOf([]interface{}{})          // get the type []interface{}
+	stringInterfaceMapType = reflect.TypeOf(map[string]interface{}{}) // get the type map[string]interface{}
+)
+
 type callQueueItem struct {
 	method string
 	args   []interface{}
@@ -181,9 +186,23 @@ func (self *Entity) handleCall(call *callQueueItem) {
 	for i, arg := range call.args {
 		argType := methodType.In(i)
 		argVal := reflect.ValueOf(arg)
-		in[i] = argVal.Convert(argType)
+		in[i] = self.convertMethodArgType(argVal, argType)
 		// log.Printf("Arg %d is %T %v value %v => %v", i, arg, arg, argVal, in[i])
 	}
 	// log.Printf("arguments: %v", in)
 	method.Call(in)
+}
+
+func (self *Entity) convertMethodArgType(val reflect.Value, typ reflect.Type) reflect.Value {
+	valType := val.Type()
+	if valType.ConvertibleTo(typ) {
+		return val.Convert(typ)
+	}
+	// can not convert directly
+	intSlice, ok := val.Interface().([]interface{})
+	if ok {
+		// val is of type []interface{}, try to convert to typ
+		targetVal := reflect.New(typ)
+
+	}
 }
