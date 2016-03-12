@@ -131,7 +131,7 @@ func sendRoutine(client *gated.GatedClient) {
 	nextAction := QUERY_ROOMS
 
 	for {
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 1)
 
 		if avatarId == "" && accountId != "" {
 			client.Call(accountId, "Login", "test", "test")

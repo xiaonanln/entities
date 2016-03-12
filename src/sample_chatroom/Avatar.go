@@ -31,4 +31,5 @@ func (self *Avatar) QueryChatRoomList() {
 
 func (self *Avatar) OnQueryChatRoomList(roomIds []int) {
 	log.Printf("Avatar.OnQueryChatRoomList: rooms = %v", roomIds)
+	self.Client.Call(self.Id(), "OnQueryChatRoomList", roomIds)
 }
