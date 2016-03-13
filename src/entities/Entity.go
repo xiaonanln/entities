@@ -2,12 +2,12 @@ package entities
 
 import (
 	. "common"
-
 	"entities/mapd_cmd"
 	"fmt"
 	"log"
 	"reflect"
 	"runtime/debug"
+	"typeconv"
 )
 
 var (
@@ -186,34 +186,9 @@ func (self *Entity) handleCall(call *callQueueItem) {
 	for i, arg := range call.args {
 		argType := methodType.In(i)
 		argVal := reflect.ValueOf(arg)
-		self.convertMethodArgType(argVal, argType, &in[i])
+		in[i] = typeconv.Convert(argVal, argType)
 		// log.Printf("Arg %d is %T %v value %v => %v", i, arg, arg, argVal, in[i])
 	}
 	// log.Printf("arguments: %v", in)
 	method.Call(in)
-}
-
-func (self *Entity) convertMethodArgType(val reflect.Value, typ reflect.Type, pTargetVal *reflect.Value) {
-	defer func() {
-		if err := recover(); err != nil {
-			// can not convert directly
-			intSlice, ok := val.Interface().([]interface{})
-			if ok {
-				// val is of type []interface{}, try to convert to typ
-				sliceSize := len(intSlice)
-				targetVal := reflect.MakeSlice(typ, sliceSize, sliceSize)
-				for i := 0; i < sliceSize; i++ {
-					tv := targetVal.Index(i)
-					sv := val.Index(i)
-					self.convertMethodArgType(sv, tv.Type(), &tv)
-				}
-				log.Printf("Converted value from %v to %v", val, targetVal)
-				*pTargetVal = targetVal
-			}
-
-			panic(fmt.Errorf("Fail to convert RPC argument %v from type %v to %v", val, val.Type(), typ))
-		}
-	}()
-
-	*pTargetVal = val.Convert(typ)
 }
